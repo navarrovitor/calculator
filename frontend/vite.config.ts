@@ -22,7 +22,13 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: ["src/**/*.{ts,tsx}"],
-      exclude: ["src/**/*.test.{ts,tsx}", "src/test/**", "src/main.tsx", "src/vite-env.d.ts"],
+      exclude: [
+        "src/**/*.test.{ts,tsx}",
+        "src/test/**",
+        "src/main.tsx",
+        "src/vite-env.d.ts",
+        "src/types.ts",
+      ],
       reporter: ["text", "html"],
     },
   },
