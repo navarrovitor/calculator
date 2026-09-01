@@ -1,18 +1,23 @@
-# OPTIONAL deliverable — shape only, not a working build.
-# TODO: multi-stage build.
-#
-# Builder stage:
-#   FROM golang:<version> AS build
-#   WORKDIR /src
-#   COPY go.mod go.sum ./
-#   RUN go mod download
-#   COPY . .
-#   RUN go build -o /server ./cmd/server
-#
-# Runtime stage:
-#   FROM gcr.io/distroless/static   (or alpine)
-#   COPY --from=build /server /server
-#   EXPOSE <port>                   # default 8080, see cmd/server
-#   ENTRYPOINT ["/server"]
+# Multi-stage build for the calculator API.
+# Builder: full Go toolchain. Runtime: distroless/static (no shell, no libc).
 
-FROM scratch
+# --- Builder stage ---
+FROM golang:1.26 AS build
+WORKDIR /src
+
+# Module metadata first so `go mod download` is cached independently of the
+# source. There is no go.sum yet (stdlib-only, per ADR-0002); the wildcard
+# keeps this working if one is added later.
+COPY go.mod go.su[m] ./
+RUN go mod download
+
+COPY . .
+
+# Static binary: no cgo, stripped, so it runs on the empty distroless image.
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /server ./cmd/server
+
+# --- Runtime stage ---
+FROM gcr.io/distroless/static-debian12:nonroot
+COPY --from=build /server /server
+EXPOSE 8080
+ENTRYPOINT ["/server"]

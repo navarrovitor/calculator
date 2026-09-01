@@ -1,19 +1,32 @@
-# OPTIONAL — skeleton only. Ports, environment, and depends_on are commented
-# TODOs pending real Dockerfiles (backend/Dockerfile, frontend/Dockerfile).
+# Brings up the calculator API and UI. The frontend's nginx proxies
+# /calculate to the backend service over the shared compose network.
+#
+#   docker compose up --build
+#
+# Frontend: http://localhost:5173  ·  Backend: http://localhost:8080
 
 services:
   backend:
     build: ./backend
-    # ports:
-    #   - "8080:8080"
-    # environment:
-    #   - PORT=8080
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
 
   frontend:
-    build: ./frontend
-    # ports:
-    #   - "5173:80"
-    # environment:
-    #   - API_BASE_URL=http://backend:8080
-    # depends_on:
-    #   - backend
+    build:
+      context: ./frontend
+      secrets:
+        - ca
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+# Extra CA roots for the frontend's `npm ci`, only needed behind a
+# TLS-inspecting proxy. Defaults to an empty file (no-op); point
+# DOCKER_CA_BUNDLE at a PEM bundle to enable — e.g.
+#   DOCKER_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt docker compose build
+secrets:
+  ca:
+    file: ${DOCKER_CA_BUNDLE:-/dev/null}

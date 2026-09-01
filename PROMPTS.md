@@ -217,6 +217,43 @@ Applying /simplify finding before actually applying Claude Design's frontend.
 **Outcome:**
 +280, -223, 5 files changed before merging the functional frontend on main
 
+### 006 — Docker packaging: multi-stage builds + compose
+*(2026-09-01, implementation)*
+
+**Prompt:**
+In a new branch (and a worktree), replace the TODO stubs in
+`backend/Dockerfile`, `frontend/Dockerfile`, and `docker-compose.yml` with
+real multi-stage builds per the stub comments: backend golang builder →
+`distroless/static` runtime; frontend node builder → nginx serving the
+static build. `docker compose` must bring up both services with the frontend
+able to reach the backend. Show the diff before committing; update the
+README Setup/Running sections once it works.
+
+**Response summary:**
+- `backend/Dockerfile` — `golang:1.26` builder (`CGO_ENABLED=0`, `-trimpath`,
+  stripped) → `gcr.io/distroless/static-debian12:nonroot`, `ENTRYPOINT
+  ["/server"]`, `EXPOSE 8080`. `COPY go.mod go.su[m]` wildcard since there is
+  no `go.sum` yet. Image ~15 MB.
+- `frontend/Dockerfile` — `node:22` builder runs `npm ci` + `npm run build`
+  → `nginx:alpine` serving `/app/dist` with `nginx.conf` (SPA fallback +
+  `location /calculate` proxying to `http://backend:8080`). Image ~94 MB.
+  Optional `ca` build secret so `npm ci` works behind a TLS-inspecting proxy.
+- `docker-compose.yml` — `backend` (8080:8080, `PORT=8080`) and `frontend`
+  (5173:80, `depends_on` backend); top-level `ca` secret sourced from
+  `${DOCKER_CA_BUNDLE:-/dev/null}`.
+- Added `backend/.dockerignore`, `frontend/.dockerignore`, `frontend/nginx.conf`.
+- README: new "With Docker" subsection under Running, plus a Setup pointer.
+
+Verified: `docker compose up --build` brings both up;
+`curl localhost:5173/calculate` returns `200`/`422` from the backend through
+the nginx proxy; `curl localhost:8080/calculate` direct also works.
+
+**My review:**
+<!-- author -->
+
+**Outcome:**
+<!-- author -->
+
 ## Design pass
 
 Design-pass prompts (the visual restyling pass in CLAUDE.md) are logged here
