@@ -186,6 +186,51 @@ dispatch by arity (`/simplify` altitude findings).
 **Outcome:**
 <!-- author -->
 
+### 005 — Rework useCalculator to intent-level actions + arity dispatch
+*(2026-09-01, implementation)*
+
+**Prompt:**
+On a branch that merges into `feat/frontend-calculator` (not `main`), apply the
+deferred `/simplify` altitude findings from prompt 004: (S-A1) make reducer
+actions plain user intents and move all interpretation into the reducer;
+(S-A5) dispatch by operand count like the backend rather than splitting
+unary/sqrt out by name.
+
+**Response summary:**
+Branch `refactor/calculator-intent-reducer` off `feat/frontend-calculator`.
+
+- `src/types.ts` — dropped `BinaryOperation`; `Operation` is the single type.
+- `src/hooks/useCalculator.ts` — `Action` is now `digit` / `decimal` /
+  `operator(op)` / `equals` / `clear` / `resolved` / `failed`. An `ARITY`
+  map (`sqrt: 1`, rest `2`) mirrors the backend dispatch; `applyOperator`
+  branches on `ARITY[op]`, so sqrt is "an operation with one operand", not a
+  bespoke handler/action. The reducer parks a backend call in
+  `status: { kind: "computing"; request; then }` where `then` is the
+  continuation (`chainInto` / `finish` / `intoBuffer`); one `useEffect`
+  drains `status`, calling `calculate()` and dispatching `resolved` /
+  `failed`, with a `cancelled` cleanup so a Clear during flight drops the
+  result. Removed `stateRef` + its effect, the request-id ref, the separate
+  `busy` `useState` (now `status.kind === "computing"`), `runCompute`, and
+  the `useCallback` wrappers. `committedValue` / `currentOperand` /
+  `displayValue` / `overwrite` behaviour unchanged.
+- `src/components/Calculator.tsx` — one `OPERATIONS` list including
+  `{ op: "sqrt", label: "√", name: "square root" }`; every operation button
+  calls `calc.inputOperation(op)`. Removed the dedicated sqrt button/handler.
+
+All 28 DOM tests pass unchanged plus one new "ignores presses while a
+calculation is in flight". `biome check` / `tsc --noEmit` clean. Coverage
+(v8): 96.73% stmts / 91.83% branch / 100% funcs / 96.73% lines; uncovered
+lines are defensive guards (non-`Error` throw, malformed response body,
+reducer intent-guard unreachable while buttons are disabled).
+
+No behaviour change intended — this is the altitude refactor only.
+
+**My review:**
+Applying /simplify finding before actually applying Claude Design's frontend.
+
+**Outcome:**
++280, -223, 5 files changed before merging the functional frontend on main
+
 ## Design pass
 
 Design-pass prompts (the visual restyling pass in CLAUDE.md) are logged here

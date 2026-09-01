@@ -11,9 +11,6 @@ export type Operation =
   | "sqrt"
   | "percentage";
 
-/** BinaryOperation is every operation that takes two operands. */
-export type BinaryOperation = Exclude<Operation, "sqrt">;
-
 /** CalculateRequest is the POST /calculate request body. */
 export interface CalculateRequest {
   operation: Operation;

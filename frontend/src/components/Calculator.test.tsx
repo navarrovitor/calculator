@@ -315,4 +315,23 @@ describe("in-flight requests", () => {
     await expectDisplay("0");
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
+
+  it("ignores digit and operator presses until the result lands", async () => {
+    let resolveFetch: (response: Response) => void = () => {};
+    fetchMock.mockImplementationOnce(
+      () =>
+        new Promise<Response>((resolve) => {
+          resolveFetch = resolve;
+        }),
+    );
+    const user = userEvent.setup();
+    render(<App />);
+    await press(user, "2+3=");
+    // Buttons are disabled while busy; even so the reducer drops these intents.
+    await press(user, "9*");
+    await expectDisplay("3");
+
+    resolveFetch(jsonResponse({ result: 5 }, 200));
+    await expectDisplay("5");
+  });
 });
