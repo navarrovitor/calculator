@@ -2,17 +2,43 @@ import { useCalculator } from "../hooks/useCalculator.ts";
 import type { Operation } from "../types.ts";
 import { Display } from "./Display.tsx";
 
-const DIGITS = ["7", "8", "9", "4", "5", "6", "1", "2", "3", "0"] as const;
+// The keypad is one grid laid out in the design handoff's key order. Each
+// entry is one button; `name` (where present) is the button's accessible name.
+type Key =
+  | { kind: "digit"; value: string }
+  | { kind: "decimal" }
+  | { kind: "operation"; op: Operation; label: string; name: string }
+  | { kind: "equals" }
+  | { kind: "clear" };
 
-// One list for every operation; `name` is the button's accessible name.
-const OPERATIONS: ReadonlyArray<{ op: Operation; label: string; name: string }> = [
-  { op: "add", label: "+", name: "add" },
-  { op: "subtract", label: "−", name: "subtract" },
-  { op: "multiply", label: "×", name: "multiply" },
-  { op: "divide", label: "÷", name: "divide" },
-  { op: "exponentiation", label: "x^y", name: "exponentiation" },
-  { op: "percentage", label: "%", name: "percentage" },
-  { op: "sqrt", label: "√", name: "square root" },
+// Operations shown in the sage "advanced" colour rather than the accent one.
+const ADVANCED_OPERATIONS: ReadonlySet<Operation> = new Set([
+  "exponentiation",
+  "percentage",
+  "sqrt",
+]);
+
+const KEYS: readonly Key[] = [
+  { kind: "digit", value: "7" },
+  { kind: "digit", value: "8" },
+  { kind: "digit", value: "9" },
+  { kind: "operation", op: "divide", label: "÷", name: "divide" },
+  { kind: "clear" },
+  { kind: "digit", value: "4" },
+  { kind: "digit", value: "5" },
+  { kind: "digit", value: "6" },
+  { kind: "operation", op: "multiply", label: "×", name: "multiply" },
+  { kind: "operation", op: "sqrt", label: "√", name: "square root" },
+  { kind: "digit", value: "1" },
+  { kind: "digit", value: "2" },
+  { kind: "digit", value: "3" },
+  { kind: "operation", op: "subtract", label: "−", name: "subtract" },
+  { kind: "operation", op: "exponentiation", label: "^", name: "exponentiation" },
+  { kind: "digit", value: "0" },
+  { kind: "decimal" },
+  { kind: "equals" },
+  { kind: "operation", op: "add", label: "+", name: "add" },
+  { kind: "operation", op: "percentage", label: "%", name: "percentage" },
 ];
 
 /**
@@ -22,58 +48,80 @@ const OPERATIONS: ReadonlyArray<{ op: Operation; label: string; name: string }> 
 export function Calculator() {
   const calc = useCalculator();
 
+  function renderKey(key: Key) {
+    switch (key.kind) {
+      case "digit":
+        return (
+          <button
+            key={`digit-${key.value}`}
+            type="button"
+            className="calculator__key calculator__key--digit"
+            disabled={calc.busy}
+            onClick={() => calc.inputDigit(key.value)}
+          >
+            {key.value}
+          </button>
+        );
+      case "decimal":
+        return (
+          <button
+            key="decimal"
+            type="button"
+            className="calculator__key calculator__key--digit"
+            aria-label="decimal point"
+            disabled={calc.busy}
+            onClick={() => calc.inputDecimal()}
+          >
+            .
+          </button>
+        );
+      case "operation": {
+        const variant = ADVANCED_OPERATIONS.has(key.op) ? "advanced" : "operation";
+        return (
+          <button
+            key={key.op}
+            type="button"
+            className={`calculator__key calculator__key--${variant}`}
+            aria-label={key.name}
+            disabled={calc.busy}
+            onClick={() => calc.inputOperation(key.op)}
+          >
+            {key.label}
+          </button>
+        );
+      }
+      case "equals":
+        return (
+          <button
+            key="equals"
+            type="button"
+            className="calculator__key calculator__key--equals"
+            aria-label="equals"
+            disabled={calc.busy}
+            onClick={() => calc.equals()}
+          >
+            =
+          </button>
+        );
+      case "clear":
+        return (
+          <button
+            key="clear"
+            type="button"
+            className="calculator__key calculator__key--clear"
+            aria-label="clear"
+            onClick={() => calc.clear()}
+          >
+            C
+          </button>
+        );
+    }
+  }
+
   return (
     <section className="calculator" aria-label="calculator">
-      <Display value={calc.display} error={calc.error} />
-
-      <div className="calculator__keys calculator__keys--digits">
-        {DIGITS.map((digit) => (
-          <button
-            key={digit}
-            type="button"
-            disabled={calc.busy}
-            onClick={() => calc.inputDigit(digit)}
-          >
-            {digit}
-          </button>
-        ))}
-        <button
-          type="button"
-          aria-label="decimal point"
-          disabled={calc.busy}
-          onClick={() => calc.inputDecimal()}
-        >
-          .
-        </button>
-      </div>
-
-      <div className="calculator__keys calculator__keys--operations">
-        {OPERATIONS.map(({ op, label, name }) => (
-          <button
-            key={op}
-            type="button"
-            aria-label={name}
-            disabled={calc.busy}
-            onClick={() => calc.inputOperation(op)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      <div className="calculator__keys calculator__keys--actions">
-        <button
-          type="button"
-          aria-label="equals"
-          disabled={calc.busy}
-          onClick={() => calc.equals()}
-        >
-          =
-        </button>
-        <button type="button" aria-label="clear" onClick={() => calc.clear()}>
-          C
-        </button>
-      </div>
+      <Display value={calc.display} expression={calc.expression} error={calc.error} />
+      <div className="calculator__keys">{KEYS.map(renderKey)}</div>
     </section>
   );
 }
