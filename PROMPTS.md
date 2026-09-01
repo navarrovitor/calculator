@@ -226,10 +226,10 @@ reducer intent-guard unreachable while buttons are disabled).
 No behaviour change intended — this is the altitude refactor only.
 
 **My review:**
-<!-- author -->
+Applying /simplify finding before actually applying Claude Design's frontend.
 
 **Outcome:**
-<!-- author -->
++280, -223, 5 files changed before merging the functional frontend on main
 
 ## Design pass
 
