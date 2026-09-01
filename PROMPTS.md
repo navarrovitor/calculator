@@ -61,7 +61,7 @@ API Examples, Design Decisions & Assumptions); Testing left for the test
 prompt.
 
 **My review:**
-_Pending author review._
+First PR looks good. Only add, subtract, multiply and divide added with 400, 405 and 422 errors handled. Ran /code-review and /simplify for any hidden bug/simplification that can be corrected.
 
 **Outcome:**
 Branch `feat/calculate-endpoint`; PR opened, pending review. Tests follow in
@@ -97,7 +97,7 @@ they cover; PR #1 still open):
 (entrypoint only).
 
 **My review:**
-_Pending author review._
+Tests added, everything looks good. Merged on main.
 
 **Outcome:**
 Pushed to branch `feat/calculate-endpoint` (PR #1).
