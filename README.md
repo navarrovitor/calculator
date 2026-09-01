@@ -82,15 +82,6 @@ frontend's nginx serves the built assets and proxies `/calculate` to the
 `backend` container, so the browser still talks to a same-origin path — no
 `VITE_API_PROXY_TARGET` needed.
 
-Behind a TLS-inspecting proxy (e.g. Zscaler), the frontend build's `npm ci`
-needs extra CA roots. Copy the override template (auto-loaded, gitignored)
-and adjust the bundle path if needed:
-
-```sh
-cp docker-compose.override.yml.example docker-compose.override.yml
-docker compose up --build
-```
-
 ## API Examples
 
 `POST /calculate` accepts `{"operation": string, "operands": [number, ...]}`

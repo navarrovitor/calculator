@@ -238,18 +238,16 @@ README Setup/Running sections once it works.
   `/app/dist` with `nginx.conf` (SPA fallback + `location /calculate`
   proxying to `backend:8080`, per-request DNS re-resolution). Image ~94 MB.
 - `docker-compose.yml` — `backend` (8080:8080) and `frontend` (5173:80,
-  `depends_on` backend). Optional `ca` build secret for TLS-inspecting
-  proxies lives in `docker-compose.override.yml.example` (gitignored when
-  copied), keeping the committed compose file clean.
+  `depends_on` backend).
 - Added `backend/.dockerignore`, `frontend/.dockerignore`,
-  `frontend/nginx.conf`, `docker-compose.override.yml.example`.
+  `frontend/nginx.conf`.
 - README: new "With Docker" subsection under Running, plus a Setup pointer.
 
 Verified: `docker compose up --build` brings both up;
 `curl localhost:5173/calculate` returns `200`/`422` from the backend through
 the nginx proxy; `curl localhost:8080/calculate` direct also works. A
 follow-up `/simplify` pass slimmed the builder images, added cache mounts,
-moved the CA secret to the override template, and trimmed comments/config.
+and trimmed comments/config.
 
 **My review:**
 <!-- author -->
