@@ -210,17 +210,18 @@ npm run test:coverage    # vitest run --coverage
 
 Vitest + React Testing Library, driving behaviour through the DOM: each
 operation's happy path, the ADR-0004 input edge cases, backend errors
-surfaced in the UI (e.g. division by zero), and an in-flight request
-abandoned on `Clear`. Coverage (v8 provider), 28 tests:
+surfaced in the UI (e.g. division by zero, plus a non-OK or malformed
+response body), and an in-flight request abandoned on `Clear`. Coverage
+(v8 provider), 30 tests:
 
 | Metric | Coverage |
 | --- | --- |
-| Statements | 96.79% |
-| Branches | 91.83% |
+| Statements | 98.07% |
+| Branches | 94.17% |
 | Functions | 100% |
-| Lines | 96.79% |
+| Lines | 98.07% |
 
-Every file except two reports 100%: `src/hooks/useCalculator.ts` (96.79%)
-and `src/lib/api.ts` (90.90%). The uncovered lines are defensive fallbacks
-and unreachable reducer guards — a non-`Error` thrown value, a malformed
-backend response body, and status branches the UI flow cannot reach.
+Every file except one reports 100%: `src/hooks/useCalculator.ts` (96.79%).
+Its uncovered lines are defensive fallbacks and unreachable reducer guards —
+a non-`Error` thrown value and status branches the UI flow cannot reach
+(buttons are disabled while a request is in flight).

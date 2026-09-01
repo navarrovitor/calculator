@@ -255,6 +255,47 @@ and trimmed comments/config.
 **Outcome:**
 <!-- author -->
 
+### 007 — Coverage-gap review + tests for the API client error paths
+*(2026-09-01, testing)*
+
+**Prompt:**
+Review current test coverage across backend and frontend. Identify specific
+gaps — untested branches, error paths, or edge cases from ADR-0003/0004 not
+yet covered. List them before writing any tests. Don't add tests for
+hypothetical scenarios outside what's already implemented. Then add the
+recommended tests on a new branch pulled from an updated `main`.
+
+**Response summary:**
+Reviewed coverage: backend `calc`/`httperr`/`api` at 100% statements;
+frontend at 96.79% stmts / 91.83% branch. Reported gaps, separating
+in-scope from defensive dead code:
+- **Covered now (this branch):** `lib/api.ts:60-61` — non-OK response whose
+  body is not the shared `{"error"}` shape (e.g. a 502 with an HTML body) →
+  `CalculationError("Request failed (<status>).")`; `lib/api.ts:64-65` — an
+  OK response whose body is not `{result: number}` →
+  `CalculationError("Received an unexpected response from the service.")`.
+- **Flagged, not added (defensive, unreachable in current code):**
+  `useCalculator.ts` 202-203 (in-flight reducer guard — buttons are
+  `disabled` while busy, `clear` is exempt), 228 / 232 (`resolved` / `failed`
+  when status is not `computing` — prevented by the effect's `cancelled`
+  flag), 111-112 (`messageFor` non-`CalculationError` fallback — `calculate()`
+  only ever rejects with `CalculationError`).
+- **Flagged, ADR-ambiguous, not added pending author call:** `calc.go:81`
+  `math.IsNaN` half of `finite` — reachable via
+  `exponentiation(-2, 0.5)` → `NaN` → 422, but ADR-0003 names only
+  "exponentiation overflow" as the in-scope exponentiation edge case.
+
+Added two cases to the "backend errors are surfaced (ADR-0005)" block in
+`Calculator.test.tsx`, driven through the DOM with the existing fetch mock
+(`mockResolvedValueOnce`). 30 tests pass; `lib/api.ts` now 100% / 100%.
+`biome check` clean.
+
+**My review:**
+<!-- author -->
+
+**Outcome:**
+<!-- author -->
+
 ## Design pass
 
 Design-pass prompts (the visual restyling pass in CLAUDE.md) are logged here
