@@ -46,6 +46,7 @@ func TestWriteStatusMapping(t *testing.T) {
 		{"operand count sentinel", calc.ErrOperandCount, http.StatusBadRequest, calc.ErrOperandCount.Error()},
 		{"unsupported operation sentinel", calc.ErrUnsupportedOperation, http.StatusUnprocessableEntity, calc.ErrUnsupportedOperation.Error()},
 		{"division by zero sentinel", calc.ErrDivisionByZero, http.StatusUnprocessableEntity, calc.ErrDivisionByZero.Error()},
+		{"negative sqrt sentinel", calc.ErrNegativeSqrt, http.StatusUnprocessableEntity, calc.ErrNegativeSqrt.Error()},
 		{"non-finite result sentinel", calc.ErrNonFiniteResult, http.StatusUnprocessableEntity, calc.ErrNonFiniteResult.Error()},
 		// A wrapped sentinel maps to the right status via errors.Is, and the
 		// body carries the sentinel's own message, not the wrapping context.

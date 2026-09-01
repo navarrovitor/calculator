@@ -22,6 +22,12 @@ func TestCalculateOperations(t *testing.T) {
 		{"multiply by zero", "multiply", []float64{123, 0}, 0},
 		{"divide", "divide", []float64{9, 2}, 4.5},
 		{"divide negative", "divide", []float64{-9, 3}, -3},
+		{"exponentiation", "exponentiation", []float64{2, 10}, 1024},
+		{"exponentiation negative exponent", "exponentiation", []float64{2, -1}, 0.5},
+		{"sqrt", "sqrt", []float64{144}, 12},
+		{"sqrt of zero", "sqrt", []float64{0}, 0},
+		{"percentage", "percentage", []float64{50, 200}, 100},
+		{"percentage negative", "percentage", []float64{10, -30}, -3},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -53,6 +59,14 @@ func TestCalculateErrors(t *testing.T) {
 		{"no operands", "multiply", nil, ErrOperandCount},
 		{"multiply overflow", "multiply", []float64{math.MaxFloat64, math.MaxFloat64}, ErrNonFiniteResult},
 		{"add overflow", "add", []float64{math.MaxFloat64, math.MaxFloat64}, ErrNonFiniteResult},
+		{"negative sqrt", "sqrt", []float64{-1}, ErrNegativeSqrt},
+		{"exponentiation overflow", "exponentiation", []float64{10, 400}, ErrNonFiniteResult},
+		{"sqrt too many operands", "sqrt", []float64{1, 2}, ErrOperandCount},
+		{"sqrt no operands", "sqrt", nil, ErrOperandCount},
+		{"exponentiation too few operands", "exponentiation", []float64{2}, ErrOperandCount},
+		{"exponentiation too many operands", "exponentiation", []float64{2, 3, 4}, ErrOperandCount},
+		{"percentage too few operands", "percentage", []float64{50}, ErrOperandCount},
+		{"percentage too many operands", "percentage", []float64{1, 2, 3}, ErrOperandCount},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

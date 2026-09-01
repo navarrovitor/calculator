@@ -28,6 +28,9 @@ func TestCalculateSuccess(t *testing.T) {
 		{"subtract", `{"operation":"subtract","operands":[10,4]}`, 6},
 		{"multiply", `{"operation":"multiply","operands":[6,7]}`, 42},
 		{"divide", `{"operation":"divide","operands":[9,2]}`, 4.5},
+		{"exponentiation", `{"operation":"exponentiation","operands":[2,10]}`, 1024},
+		{"sqrt", `{"operation":"sqrt","operands":[144]}`, 12},
+		{"percentage", `{"operation":"percentage","operands":[50,200]}`, 100},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -66,6 +69,11 @@ func TestCalculateErrorStatus(t *testing.T) {
 		{"empty body", ``, http.StatusBadRequest},
 		{"trailing data after object", `{"operation":"add","operands":[1,2]} extra`, http.StatusBadRequest},
 		{"missing operation", `{"operands":[1,2]}`, http.StatusBadRequest},
+		{"negative sqrt", `{"operation":"sqrt","operands":[-1]}`, http.StatusUnprocessableEntity},
+		{"exponentiation overflow", `{"operation":"exponentiation","operands":[10,400]}`, http.StatusUnprocessableEntity},
+		{"sqrt wrong operand count", `{"operation":"sqrt","operands":[1,2]}`, http.StatusBadRequest},
+		{"exponentiation wrong operand count", `{"operation":"exponentiation","operands":[2]}`, http.StatusBadRequest},
+		{"percentage wrong operand count", `{"operation":"percentage","operands":[1]}`, http.StatusBadRequest},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
