@@ -172,6 +172,26 @@ describe("input edge cases (ADR-0004)", () => {
     await expectDisplay("5");
   });
 
+  it("starts a fresh entry when a digit follows a computed value", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    // sqrt(9) -> 3, then typing 5 replaces the computed 3 rather than making 35
+    await press(user, "9r");
+    await expectDisplay("3");
+    await press(user, "5");
+    await expectDisplay("5");
+    await press(user, "+2=");
+    await expectDisplay("7");
+  });
+
+  it("rejects square root of a half-entered operation as empty input", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await press(user, "2+r");
+    expect(screen.getByRole("alert")).toHaveTextContent("Enter a number first.");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("treats a repeated operator as swapping the pending operator", async () => {
     const user = userEvent.setup();
     render(<App />);
@@ -271,5 +291,28 @@ describe("backend errors are surfaced (ADR-0005)", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Could not reach the calculator service.",
     );
+  });
+});
+
+describe("in-flight requests", () => {
+  it("drops a result that lands after Clear", async () => {
+    let resolveFetch: (response: Response) => void = () => {};
+    fetchMock.mockImplementationOnce(
+      () =>
+        new Promise<Response>((resolve) => {
+          resolveFetch = resolve;
+        }),
+    );
+    const user = userEvent.setup();
+    render(<App />);
+    await press(user, "2+3=");
+    await press(user, "c");
+    await expectDisplay("0");
+
+    resolveFetch(jsonResponse({ result: 5 }, 200));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    await expectDisplay("0");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });
