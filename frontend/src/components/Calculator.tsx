@@ -23,10 +23,10 @@ export function Calculator() {
   const calc = useCalculator();
 
   return (
-    <section aria-label="calculator">
+    <section className="calculator" aria-label="calculator">
       <Display value={calc.display} error={calc.error} />
 
-      <div>
+      <div className="calculator__keys calculator__keys--digits">
         {DIGITS.map((digit) => (
           <button
             key={digit}
@@ -47,7 +47,7 @@ export function Calculator() {
         </button>
       </div>
 
-      <div>
+      <div className="calculator__keys calculator__keys--operations">
         {OPERATIONS.map(({ op, label, name }) => (
           <button
             key={op}
@@ -61,7 +61,7 @@ export function Calculator() {
         ))}
       </div>
 
-      <div>
+      <div className="calculator__keys calculator__keys--actions">
         <button
           type="button"
           aria-label="equals"
