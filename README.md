@@ -101,6 +101,10 @@ Assumptions made during implementation that the ADRs do not cover:
 - A missing or empty `operation` is malformed input (`400`); a present but
   unrecognised operation is `422`.
 - A non-numeric value in `operands` is malformed input (`400`).
+- The body must be exactly one JSON object; trailing data or a second object
+  is malformed input (`400`).
+- A result that overflows `float64` to a non-finite number is `422`
+  (well-formed request, invalid calculation).
 - Non-POST requests to `/calculate` return `405` in the same `{"error"}` body
   shape, with an `Allow: POST` header.
 

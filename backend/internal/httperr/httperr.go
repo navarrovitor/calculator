@@ -43,8 +43,8 @@ type body struct {
 
 // Write maps err to a status code and writes the {"error": "message"} body. It
 // honours an *Error directly; otherwise it recognises the calc sentinels
-// (ErrOperandCount -> 400; ErrUnsupportedOperation and ErrDivisionByZero ->
-// 422). Anything else is a 500 with a generic message.
+// (ErrOperandCount -> 400; ErrUnsupportedOperation, ErrDivisionByZero, and
+// ErrNonFiniteResult -> 422). Anything else is a 500 with a generic message.
 func Write(w http.ResponseWriter, err error) {
 	he := classify(err)
 
@@ -61,7 +61,9 @@ func classify(err error) *Error {
 	switch {
 	case errors.Is(err, calc.ErrOperandCount):
 		return BadRequest(err.Error())
-	case errors.Is(err, calc.ErrUnsupportedOperation), errors.Is(err, calc.ErrDivisionByZero):
+	case errors.Is(err, calc.ErrUnsupportedOperation),
+		errors.Is(err, calc.ErrDivisionByZero),
+		errors.Is(err, calc.ErrNonFiniteResult):
 		return Unprocessable(err.Error())
 	default:
 		return &Error{Status: http.StatusInternalServerError, Message: "internal server error"}

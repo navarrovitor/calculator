@@ -2,11 +2,19 @@
 // knowledge of HTTP; callers translate its errors into responses.
 package calc
 
-import "errors"
+import (
+	"errors"
+	"math"
+)
 
 // ErrOperandCount indicates the operand count does not match the operation's
 // arity. The HTTP layer maps it to 400 (malformed input).
 var ErrOperandCount = errors.New("expected exactly 2 operands")
+
+// ErrNonFiniteResult indicates the operation overflowed float64 or is
+// otherwise not a finite number. The HTTP layer maps it to 422 (well-formed
+// request, invalid calculation).
+var ErrNonFiniteResult = errors.New("result is not a finite number")
 
 // ErrUnsupportedOperation indicates the operation name is not recognised. The
 // HTTP layer maps it to 422 (well-formed request, invalid calculation).
@@ -42,7 +50,14 @@ func Calculate(operation string, operands []float64) (float64, error) {
 	if len(operands) != 2 {
 		return 0, ErrOperandCount
 	}
-	return op(operands[0], operands[1])
+	result, err := op(operands[0], operands[1])
+	if err != nil {
+		return 0, err
+	}
+	if math.IsInf(result, 0) || math.IsNaN(result) {
+		return 0, ErrNonFiniteResult
+	}
+	return result, nil
 }
 
 // divide returns a/b, or ErrDivisionByZero when b is zero.

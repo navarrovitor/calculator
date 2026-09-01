@@ -4,6 +4,7 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 
 	"github.com/navarrovitor/calculator/backend/internal/calc"
@@ -41,12 +42,17 @@ func handleMethodNotAllowed(w http.ResponseWriter, _ *http.Request) {
 // httperr.Write so the error body shape stays consistent (ADR-0002).
 func handleCalculate(w http.ResponseWriter, r *http.Request) {
 	var req request
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	dec := json.NewDecoder(r.Body)
+	if err := dec.Decode(&req); err != nil {
 		if _, ok := errors.AsType[*json.UnmarshalTypeError](err); ok {
 			httperr.Write(w, httperr.BadRequest("operands must be numbers"))
 			return
 		}
 		httperr.Write(w, httperr.BadRequest("request body is not valid JSON"))
+		return
+	}
+	if err := dec.Decode(&struct{}{}); !errors.Is(err, io.EOF) {
+		httperr.Write(w, httperr.BadRequest("request body must be a single JSON object"))
 		return
 	}
 	if req.Operation == "" {
