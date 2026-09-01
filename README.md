@@ -13,9 +13,10 @@ calculator UI (React + TypeScript + Vite), in a monorepo:
 
 Implemented so far: the backend `POST /calculate` endpoint for all seven
 operations (ADR-0003) — `add`, `subtract`, `multiply`, `divide`,
-`exponentiation`, `sqrt`, and `percentage` — and the frontend functional pass:
-a button-grid calculator (ADR-0004) wired to the endpoint. Visual styling is a
-separate later pass.
+`exponentiation`, `sqrt`, and `percentage` — the frontend functional pass (a
+button-grid calculator, ADR-0004, wired to the endpoint), and the visual
+restyling pass (CLAUDE.md), applying a design-system handoff as CSS only with
+no behaviour change.
 
 <!--
   Setup: prerequisites (Go version, Node version) and one-time install steps
