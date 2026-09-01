@@ -160,31 +160,17 @@ in-flight request abandoned on `Clear`. `biome check` and `tsc --noEmit` clean.
 Coverage (v8): 98.13% stmts / 94.62% branch / 100% funcs / 98.13% lines;
 remaining lines are defensive fallbacks.
 
-`/code-review`: 2 code findings — (1) `Clear` did not abandon an in-flight
-request, so a late result/error landed on cleared state; (2) `√` on a
-half-entered operation (`2 + √`) rooted the left operand and injected it as the
-right operand. Plus a stray committed `tmp/build-errors.log` (removed
-separately).
-`/simplify`: reuse — twin type guards in `api.ts`, the operand-fallback ladder
-written three times; simplification — `stateRef`/`useEffect`/`useCallback`
-scaffolding, unused `pendingOperation` return, three near-identical operator
-reducer cases, nested ternaries; altitude — actions named as scenarios not
-intents, `buffer` overloaded with computed values, unary/binary split by name
-rather than arity.
+`/code-review`: 1 code finding — `√` on a half-entered operation (`2 + √`) rooted the left operand and injected it as the right operand. Plus a stray committed `tmp/build-errors.log` (removed separately).
+`/simplify`: reuse — twin type guards in `api.ts`, the operand-fallback ladder written three times; simplification — `stateRef`/`useEffect`/`useCallback` scaffolding, unused `pendingOperation` return, three near-identical operator reducer cases, nested ternaries; altitude — actions named as scenarios not intents, `buffer` overloaded with computed values, unary/binary split by name rather than arity.
 
-Applied (author-approved): request-id guard in `runCompute` + `clear()`
-invalidates in-flight work; `√` on a half-entered op is treated as empty input
-("Enter a number first."); `overwrite` flag so a digit after a computed value
-starts fresh; shared `committedValue(state)` helper for the display and the
-`sqrt` source; removed the unused `pendingOperation`. Deferred to a later
-prompt: reworking the reducer to intent-level actions and unifying unary/binary
-dispatch by arity (`/simplify` altitude findings).
+Applied (author-approved): request-id guard in `runCompute` + `clear()` invalidates in-flight work; `√` on a half-entered op is treated as empty input ("Enter a number first."); `overwrite` flag so a digit after a computed value starts fresh; shared `committedValue(state)` helper for the display and the `sqrt` source; removed the unused `pendingOperation`. Deferred to a later prompt: reworking the reducer to intent-level actions and unifying unary/binary dispatch by arity (`/simplify` altitude findings).
 
 **My review:**
-<!-- author -->
+Bigger as I'd like PR, had to spent some time reviewing and testing it while prompt 005 was running. Had to correct 'Clear' button (it did not abandon in-flight requests, so a late error landed on cleared state).
+Also, square root edge case found by /code-review and later corrected (check above). /simplify found a reuse case and it was implemented on a different branch through prompt 005.
 
 **Outcome:**
-<!-- author -->
+Spent some extra time on making frontend functional, but edge cases were covered by digging in.
 
 ### 005 — Rework useCalculator to intent-level actions + arity dispatch
 *(2026-09-01, implementation)*
