@@ -11,9 +11,9 @@ A REST calculator API (Go, standard-library `net/http`) plus a button-grid
 calculator UI (React + TypeScript + Vite), in a monorepo:
 [`backend/`](backend) and [`frontend/`](frontend).
 
-Implemented so far: the backend `POST /calculate` endpoint for the four
-arithmetic operations `add`, `subtract`, `multiply`, and `divide`. The
-remaining operations (ADR-0003) and the frontend are not built yet.
+Implemented so far: the backend `POST /calculate` endpoint for all seven
+operations (ADR-0003) — `add`, `subtract`, `multiply`, `divide`,
+`exponentiation`, `sqrt`, and `percentage`. The frontend is not built yet.
 
 <!--
   Setup: prerequisites (Go version, Node version) and one-time install steps
@@ -56,16 +56,23 @@ The frontend dev server and its wiring to the API are not implemented yet.
 -->
 ## API Examples
 
-`POST /calculate` takes `{"operation": string, "operands": [number, number]}`
-and returns `{"result": number}`. Each of `add`, `subtract`, `multiply`, and
-`divide` takes exactly two operands. See [docs/ADR.md](docs/ADR.md) — ADR-0001
-(endpoint shape) and ADR-0002 (status codes).
+`POST /calculate` takes `{"operation": string, "operands": [number, ...]}`
+and returns `{"result": number}`. `add`, `subtract`, `multiply`, `divide`,
+`exponentiation`, and `percentage` take two operands; `sqrt` takes one. See
+[docs/ADR.md](docs/ADR.md) — ADR-0001 (endpoint shape), ADR-0002 (status
+codes), ADR-0003 (the operation set).
 
 Success:
 
 ```sh
 $ curl -s localhost:8080/calculate -d '{"operation":"add","operands":[2,3]}'
 {"result":5}
+$ curl -s localhost:8080/calculate -d '{"operation":"exponentiation","operands":[2,10]}'
+{"result":1024}
+$ curl -s localhost:8080/calculate -d '{"operation":"sqrt","operands":[144]}'
+{"result":12}
+$ curl -s localhost:8080/calculate -d '{"operation":"percentage","operands":[50,200]}'
+{"result":100}
 ```
 
 `400 Bad Request` — malformed input (invalid JSON, missing fields, non-numeric
@@ -73,15 +80,17 @@ operands, wrong operand count):
 
 ```sh
 $ curl -s localhost:8080/calculate -d '{"operation":"add","operands":[1,2,3]}'
-{"error":"expected exactly 2 operands"}
+{"error":"wrong operand count for operation"}
 ```
 
 `422 Unprocessable Entity` — well-formed request, invalid calculation
-(division by zero, unsupported operation):
+(division by zero, square root of a negative number, unsupported operation):
 
 ```sh
 $ curl -s localhost:8080/calculate -d '{"operation":"divide","operands":[1,0]}'
 {"error":"division by zero"}
+$ curl -s localhost:8080/calculate -d '{"operation":"sqrt","operands":[-1]}'
+{"error":"square root of a negative number"}
 ```
 
 <!--
@@ -97,7 +106,9 @@ here.
 Assumptions made during implementation that the ADRs do not cover:
 
 - The `operation` field uses the literal strings `add`, `subtract`,
-  `multiply`, `divide`.
+  `multiply`, `divide`, `exponentiation`, `sqrt`, `percentage`.
+- `percentage` has no universal meaning across calculators; this API uses the
+  definition fixed in [ADR-0003](docs/ADR.md).
 - A missing or empty `operation` is malformed input (`400`); a present but
   unrecognised operation is `422`.
 - A non-numeric value in `operands` is malformed input (`400`).
@@ -127,7 +138,7 @@ go test ./... -cover
 ```
 
 Table-driven tests cover `internal/calc`, `internal/httperr`, and
-`internal/api` (the four operations, the status-code split, and the error
+`internal/api` (all seven operations, the status-code split, and the error
 body shape). Coverage by package:
 
 | Package | Coverage |

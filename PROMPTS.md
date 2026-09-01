@@ -102,6 +102,69 @@ Tests added, everything looks good. Merged on main.
 **Outcome:**
 Pushed to branch `feat/calculate-endpoint` (PR #1).
 
+### 003 — Optional operations: exponentiation, sqrt, percentage
+*(2026-09-01, implementation & testing)*
+
+**Prompt:**
+Create branch `feat/optional-operations`. Implement exponentiation, sqrt, and
+percentage on the existing `POST /calculate` endpoint per ADR-0003, following
+the same package layout and conventions as the four required operations (no
+HTTP types in `calc`). `percentage(a, b) = (a / 100) * b`. sqrt is unary,
+exponentiation and percentage are binary — validate operand count per
+operation, not a fixed count. `422` for negative sqrt input; `400` for wrong
+operand count on all three. Reuse the existing error shape and status-code
+conventions; don't introduce new ones. Show the implementation diff before
+committing. Then add table-driven tests matching the existing coverage: happy
+path for each, negative sqrt, exponentiation overflow, wrong operand count for
+each. Run `go test ./... -cover`, `gofmt -l`, `go vet ./...` and report. Then
+run `/code-review` and `/simplify` against the branch, reporting every finding
+without filtering. For the PR: add this log entry, update the README API
+Examples and Design Decisions sections, open the PR without merging.
+
+**Response summary:**
+Implementation (`feat(backend): add exponentiation, sqrt, percentage
+operations`, 397a155):
+- `internal/calc/calc.go` — new `unaryOp` type and `unaryOps` dispatch table
+  holding `sqrt`; `exponentiation` and `percentage` added to `binaryOps`.
+  `Calculate` checks the unary table first (arity 1), then the binary table
+  (arity 2), else `ErrUnsupportedOperation` (unknown-name-before-arity order
+  preserved). Extracted a `finite(result, err)` helper for the shared
+  non-finite/NaN check. New sentinel `ErrNegativeSqrt` (422), mapped the same
+  way as `ErrDivisionByZero`. `ErrOperandCount`'s message changed from
+  "expected exactly 2 operands" to "wrong operand count for operation" since
+  `httperr` emits the sentinel's own static message and arity is now
+  per-operation.
+- `internal/httperr/httperr.go` — one `errors.Is(err, calc.ErrNegativeSqrt)`
+  case added to `classify`; doc comment updated. No change to `internal/api`.
+
+Tests (`test(backend): cover exponentiation, sqrt, percentage operations`,
+c2d9ca8) — new rows in the existing tables across all three packages: happy
+path per operation, negative sqrt -> `ErrNegativeSqrt`/422, exponentiation
+overflow (`10 ** 400`) -> `ErrNonFiniteResult`/422, wrong operand count per
+operation -> `ErrOperandCount`/400.
+
+`go test ./... -cover`: 77 pass — `internal/calc` / `internal/httperr` /
+`internal/api` 100.0%, `cmd/server` 0.0% (entrypoint). `gofmt -l` clean,
+`go vet ./...` clean.
+
+`/code-review`: no correctness/reuse/simplification/efficiency findings; one
+conventions note that this PROMPTS.md entry was still missing (added here).
+`/simplify` (reuse, simplification, efficiency, altitude): no actionable
+findings — the parallel unary/binary tables and per-sentinel `classify` cases
+were judged the right altitude for a fixed 7-operation set; unifying them was
+considered and rejected as clever-not-simpler.
+
+README updated: API Examples gains the three operations (and the refreshed
+`ErrOperandCount` message text); Design Decisions notes the `percentage`
+definition with a link to ADR-0003; Overview and Testing lines updated from
+"four operations" to all seven.
+
+**My review:**
+<!-- author to complete -->
+
+**Outcome:**
+<!-- author to complete -->
+
 ## Design pass
 
 Design-pass prompts (the visual restyling pass in CLAUDE.md) are logged here
