@@ -1,16 +1,18 @@
 import { useCalculator } from "../hooks/useCalculator.ts";
-import type { BinaryOperation } from "../types.ts";
+import type { Operation } from "../types.ts";
 import { Display } from "./Display.tsx";
 
 const DIGITS = ["7", "8", "9", "4", "5", "6", "1", "2", "3", "0"] as const;
 
-const BINARY_OPERATIONS: ReadonlyArray<{ op: BinaryOperation; label: string }> = [
-  { op: "add", label: "+" },
-  { op: "subtract", label: "−" },
-  { op: "multiply", label: "×" },
-  { op: "divide", label: "÷" },
-  { op: "exponentiation", label: "x^y" },
-  { op: "percentage", label: "%" },
+// One list for every operation; `name` is the button's accessible name.
+const OPERATIONS: ReadonlyArray<{ op: Operation; label: string; name: string }> = [
+  { op: "add", label: "+", name: "add" },
+  { op: "subtract", label: "−", name: "subtract" },
+  { op: "multiply", label: "×", name: "multiply" },
+  { op: "divide", label: "÷", name: "divide" },
+  { op: "exponentiation", label: "x^y", name: "exponentiation" },
+  { op: "percentage", label: "%", name: "percentage" },
+  { op: "sqrt", label: "√", name: "square root" },
 ];
 
 /**
@@ -46,25 +48,17 @@ export function Calculator() {
       </div>
 
       <div>
-        {BINARY_OPERATIONS.map(({ op, label }) => (
+        {OPERATIONS.map(({ op, label, name }) => (
           <button
             key={op}
             type="button"
-            aria-label={op}
+            aria-label={name}
             disabled={calc.busy}
-            onClick={() => calc.chooseOperation(op)}
+            onClick={() => calc.inputOperation(op)}
           >
             {label}
           </button>
         ))}
-        <button
-          type="button"
-          aria-label="square root"
-          disabled={calc.busy}
-          onClick={() => calc.applySquareRoot()}
-        >
-          {"√"}
-        </button>
       </div>
 
       <div>
