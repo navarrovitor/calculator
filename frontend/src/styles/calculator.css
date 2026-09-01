@@ -1,8 +1,7 @@
 /*
- * Visual restyling pass — Organic design system (Claude Design handoff).
- * Styling only: every value is taken from the tokens in tokens.css. No
- * component logic, state, or markup structure is affected by this file.
- * Button variants key off each button's stable aria-label, not DOM order.
+ * Calculator styling — Organic design system (Claude Design handoff).
+ * Every value comes from the tokens in tokens.css. Button variants key off
+ * a semantic modifier class assigned in Calculator.tsx, not DOM order.
  */
 
 /* — page shell — */
@@ -42,6 +41,14 @@
   padding: 4px 6px 18px;
 }
 
+.calculator__expression {
+  min-height: 22px;
+  font-size: 15px;
+  text-align: right;
+  letter-spacing: 0.02em;
+  color: var(--color-neutral-700);
+}
+
 .calculator__value {
   display: block;
   min-height: 56px;
@@ -56,6 +63,10 @@
   overflow-wrap: anywhere;
 }
 
+.calculator__value--muted {
+  color: var(--color-neutral-500);
+}
+
 .calculator__error {
   margin: 0;
   font-size: 15px;
@@ -64,26 +75,14 @@
   color: var(--color-accent-700);
 }
 
-/* — key groups — */
+/* — keypad: one grid, design-handoff key order — */
 .calculator__keys {
   display: grid;
+  grid-template-columns: repeat(5, 1fr);
   gap: 10px;
 }
 
-.calculator__keys--digits {
-  grid-template-columns: repeat(3, 1fr);
-}
-
-.calculator__keys--operations {
-  grid-template-columns: repeat(4, 1fr);
-}
-
-.calculator__keys--actions {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-/* — keys — */
-.calculator__keys button {
+.calculator__key {
   appearance: none;
   border: none;
   cursor: pointer;
@@ -98,80 +97,71 @@
   transition: background-color 120ms ease, transform 80ms ease;
 }
 
-.calculator__keys button:disabled {
+.calculator__key:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
 
-.calculator__keys button:active:not(:disabled) {
+.calculator__key:active:not(:disabled) {
   transform: scale(0.96);
 }
 
 /* digits + decimal point: neutral fill */
-.calculator__keys--digits button {
+.calculator__key--digit {
   background: var(--color-neutral-200);
   color: var(--color-text);
 }
 
-.calculator__keys--digits button:hover:not(:disabled) {
+.calculator__key--digit:hover:not(:disabled) {
   background: var(--color-neutral-300);
 }
 
-/* operations: accent tint (the group default) */
-.calculator__keys--operations button {
+/* core operations: accent tint */
+.calculator__key--operation {
   background: var(--color-accent-100);
   color: var(--color-accent-700);
 }
 
-.calculator__keys--operations button:hover:not(:disabled) {
+.calculator__key--operation:hover:not(:disabled) {
   background: var(--color-accent-200);
 }
 
 /* advanced operations + clear: sage tint */
-.calculator__keys--operations button[aria-label="exponentiation"],
-.calculator__keys--operations button[aria-label="percentage"],
-.calculator__keys--operations button[aria-label="square root"],
-.calculator__keys--actions button[aria-label="clear"] {
+.calculator__key--advanced,
+.calculator__key--clear {
   background: var(--color-accent-2-100);
   color: var(--color-accent-2-700);
 }
 
-.calculator__keys--operations button[aria-label="exponentiation"]:hover:not(:disabled),
-.calculator__keys--operations button[aria-label="percentage"]:hover:not(:disabled),
-.calculator__keys--operations button[aria-label="square root"]:hover:not(:disabled),
-.calculator__keys--actions button[aria-label="clear"]:hover:not(:disabled) {
+.calculator__key--advanced:hover:not(:disabled),
+.calculator__key--clear:hover:not(:disabled) {
   background: var(--color-accent-2-200);
 }
 
-/* advanced-operation glyphs sit a touch smaller */
-.calculator__keys--operations button[aria-label="exponentiation"],
-.calculator__keys--operations button[aria-label="percentage"],
-.calculator__keys--operations button[aria-label="square root"] {
+.calculator__key--advanced {
   font-size: 19px;
 }
 
 /* equals: solid accent */
-.calculator__keys--actions button[aria-label="equals"] {
+.calculator__key--equals {
   background: var(--color-accent);
   color: var(--color-bg);
 }
 
-.calculator__keys--actions button[aria-label="equals"]:hover:not(:disabled) {
+.calculator__key--equals:hover:not(:disabled) {
   background: var(--color-accent-600);
 }
 
-/* — narrow screens: dock the card as a bottom sheet — */
-@media (max-width: 480px) {
-  .app {
-    justify-content: flex-end;
-    padding: 0;
-  }
+/* — narrow screens: dock the card as a bottom sheet (toggled by JS) — */
+.app--compact {
+  justify-content: flex-end;
+  padding: 0;
+}
 
-  .calculator {
-    width: 100%;
-    max-width: 480px;
-    gap: 16px;
-    padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  }
+.app--compact .calculator {
+  width: 100%;
+  max-width: 480px;
+  gap: 16px;
+  padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }

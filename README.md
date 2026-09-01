@@ -14,9 +14,11 @@ calculator UI (React + TypeScript + Vite), in a monorepo:
 Implemented so far: the backend `POST /calculate` endpoint for all seven
 operations (ADR-0003) — `add`, `subtract`, `multiply`, `divide`,
 `exponentiation`, `sqrt`, and `percentage` — the frontend functional pass (a
-button-grid calculator, ADR-0004, wired to the endpoint), and the visual
-restyling pass (CLAUDE.md), applying a design-system handoff as CSS only with
-no behaviour change.
+button-grid calculator, ADR-0004, wired to the endpoint), the visual
+restyling pass (CLAUDE.md) applying a design-system handoff as CSS only, and a
+follow-up applying the handoff items that needed markup/state changes: a
+pending-expression line above the display, a single-grid keypad in the
+handoff's key order, and a viewport-driven mobile layout.
 
 <!--
   Setup: prerequisites (Go version, Node version) and one-time install steps
@@ -157,13 +159,23 @@ client-side validation):
 - A request still in flight when `Clear` is pressed is abandoned; its result
   never lands on the cleared state.
 - Backend `400`/`422` messages are shown verbatim; transport failures show a
-  generic "could not reach the service" message.
+  generic "could not reach the service" message. The error persists (in a
+  `role="alert"`, with the last value dimmed) until `Clear` or the next digit
+  — it is not auto-dismissed.
+- A pending binary operation shows a `left-operand operator` line above the
+  display (e.g. `12 +`), using the operator's button glyph; it clears on `=`
+  or `Clear`. `sqrt` is unary and never produces this line.
+- Exponentiation's button glyph is `^`. The keypad is one 5-column grid laid
+  out in the design-handoff order, not three separate rows.
+- Below 480px the card docks as a full-width bottom sheet; the switch is
+  driven by `window.matchMedia`, so the layout also updates on resize /
+  rotation rather than only at load.
 
-Manual / visual-QA items from ADR-0004, deferred to the visual pass and
-checked by hand: screen-rotation layout shifts, font-render truncation,
-dynamic font-resize bounds. Also by hand: long-decimal results are shown
-unformatted (e.g. `√2` → `1.4142135623730951`); display formatting is part of
-the visual pass.
+Manual / visual-QA items from ADR-0004, checked by hand: screen-rotation
+layout shifts and dynamic font-resize bounds. Long-decimal results are shown
+numerically unformatted (e.g. `√2` → `1.4142135623730951`) and now wrap
+within the card rather than being clipped; numeric formatting of the result
+remains out of scope.
 
 <!--
   Testing: how to run backend and frontend tests, and the real coverage
@@ -200,15 +212,17 @@ npx vitest run --coverage
 
 Vitest + React Testing Library, exercising behaviour through the DOM: each
 operation's happy path, the ADR-0004 input edge cases, backend errors
-surfaced in the UI (e.g. division by zero), and an in-flight request
-abandoned on `Clear`. Coverage (v8), 27 tests:
+surfaced in the UI (e.g. division by zero), an in-flight request abandoned on
+`Clear`, the pending-expression line, and the `matchMedia`-driven layout
+switch. Coverage (v8), 36 tests:
 
 | Metric | Coverage |
 | --- | --- |
-| Statements | 98.13% |
-| Branches | 94.62% |
+| Statements | 97.42% |
+| Branches | 93.38% |
 | Functions | 100% |
-| Lines | 98.13% |
+| Lines | 97.42% |
 
 Uncovered lines are defensive fallbacks only (a non-`Error` thrown value; a
-malformed backend response body).
+malformed backend response body; reducer guards unreachable while the buttons
+are disabled).
