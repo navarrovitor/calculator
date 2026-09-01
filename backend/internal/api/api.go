@@ -4,7 +4,6 @@ package api
 import (
 	"encoding/json"
 	"errors"
-	"io"
 	"net/http"
 
 	"github.com/navarrovitor/calculator/backend/internal/calc"
@@ -51,7 +50,7 @@ func handleCalculate(w http.ResponseWriter, r *http.Request) {
 		httperr.Write(w, httperr.BadRequest("request body is not valid JSON"))
 		return
 	}
-	if err := dec.Decode(&struct{}{}); !errors.Is(err, io.EOF) {
+	if dec.More() {
 		httperr.Write(w, httperr.BadRequest("request body must be a single JSON object"))
 		return
 	}
