@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Multi-stage build for the calculator UI.
 # Builder: Node toolchain runs `vite build`. Runtime: nginx serves the static
 # bundle and proxies /calculate to the backend (same-origin, as in dev).

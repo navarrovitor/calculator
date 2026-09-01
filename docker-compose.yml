@@ -20,6 +20,10 @@ services:
         - ca
     ports:
       - "5173:80"
+    # Start ordering only. The backend runtime is distroless (no shell/curl),
+    # so there is no healthcheck to gate on; nginx re-resolves `backend` per
+    # request (see nginx.conf), so a backend that binds a moment later just
+    # yields a transient 502 that self-heals.
     depends_on:
       - backend
 
