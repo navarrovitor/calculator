@@ -33,6 +33,17 @@ const ARITY: Record<Operation, 1 | 2> = {
   percentage: 2,
 };
 
+/** OPERATOR_SYMBOL is the glyph shown for a pending operation in the expression line. */
+const OPERATOR_SYMBOL: Record<Operation, string> = {
+  add: "+",
+  subtract: "−",
+  multiply: "×",
+  divide: "÷",
+  exponentiation: "^",
+  percentage: "%",
+  sqrt: "√",
+};
+
 // Continuation is what `applyResult` does with a resolved backend result.
 type Continuation =
   | { apply: "chainInto"; op: Operation } // fold result into the accumulator, then start `op`
@@ -102,6 +113,18 @@ function displayValue(state: CalculatorState): string {
     return state.buffer;
   }
   return String(committedValue(state) ?? 0);
+}
+
+/**
+ * expressionText is the "left operand + pending operator" line shown above the
+ * display while a binary operation waits for its right operand. Empty when
+ * nothing is pending.
+ */
+function expressionText(state: CalculatorState): string {
+  if (state.pendingOp === null || state.accumulator === null) {
+    return "";
+  }
+  return `${state.accumulator} ${OPERATOR_SYMBOL[state.pendingOp]}`;
 }
 
 function messageFor(err: unknown): string {
@@ -236,6 +259,7 @@ function reducer(state: CalculatorState, action: Action): CalculatorState {
 /** UseCalculator is the return shape of the useCalculator hook. */
 export interface UseCalculator {
   display: string;
+  expression: string;
   error: string | null;
   busy: boolean;
   inputDigit: (digit: string) => void;
@@ -274,6 +298,7 @@ export function useCalculator(): UseCalculator {
 
   return {
     display: displayValue(state),
+    expression: expressionText(state),
     error: state.error,
     busy: state.status.kind === "computing",
     inputDigit: (digit) => dispatch({ type: "digit", digit }),

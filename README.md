@@ -13,8 +13,10 @@ The API is one endpoint, `POST /calculate`, covering all seven operations
 `sqrt`, `percentage`. The frontend is built in two passes (see CLAUDE.md): a
 functional pass — the button-grid calculator wired to the endpoint
 (ADR-0004) — and a visual restyling pass that applies a design-system handoff
-as CSS only, with no behaviour change. The visual pass was done with Claude
-Design.
+as CSS only, with no behaviour change, plus a follow-up pass implementing the
+handoff items that needed markup/state changes: a pending-expression line
+above the display, a single-grid keypad in the handoff's key order, and a
+viewport-driven mobile layout. The visual work was done with Claude Design.
 
 ## Setup
 
@@ -166,19 +168,34 @@ shallow client-side validation):
   a second decimal point is ignored; leading zeros collapse (`007` → `7`); a
   repeated operator swaps the pending one; `=` after a trailing operator
   reuses the left operand (`2 + =` → `4`); a redundant `=` and an empty
-  submission are no-ops; `√` applies immediately to the current entry, and
-  `√` on a half-entered operation (`2 + √`) prompts for a number rather than
-  rooting the left operand.
-- A request in flight when `Clear` is pressed is abandoned; its result never
-  lands on the cleared state.
-- Backend `400`/`422` messages are shown verbatim; a transport failure shows
-  a generic "could not reach the service" message.
+  submission are no-ops; `√` is applied immediately to the current entry.
+- `√` pressed with a half-entered operation (`2 + √`, nothing typed for the
+  right operand) is treated as empty input and prompts for a number rather
+  than rooting the left operand.
+- A request still in flight when `Clear` is pressed is abandoned; its result
+  never lands on the cleared state.
+- Backend `400`/`422` messages are shown verbatim; transport failures show a
+  generic "could not reach the service" message. The error persists (in a
+  `role="alert"`, with the last value dimmed) until `Clear` or the next digit
+  — it is not auto-dismissed.
 - The visual restyling pass is CSS / `className` only (CLAUDE.md two-pass
-  rule). It was done with Claude Design against a design-system handoff and
-  changed no component logic, hooks, or tests.
-- Deferred to manual / visual QA (ADR-0004): screen-rotation layout shifts,
-  font-render truncation, dynamic font-resize bounds, and long-decimal
-  results shown unformatted (`√2` → `1.4142135623730951`).
+  rule), done with Claude Design against a design-system handoff; a follow-up
+  pass then implemented the handoff items that needed markup/state changes
+  (below). Neither changed the `useCalculator` state model.
+- A pending binary operation shows a `left-operand operator` line above the
+  display (e.g. `12 +`), using the operator's button glyph; it clears on `=`
+  or `Clear`. `sqrt` is unary and never produces this line.
+- Exponentiation's button glyph is `^`. The keypad is one 5-column grid laid
+  out in the design-handoff order, not three separate rows.
+- Below 480px the card docks as a full-width bottom sheet; the switch is
+  driven by `window.matchMedia`, so the layout also updates on resize /
+  rotation rather than only at load.
+
+Manual / visual-QA items from ADR-0004, checked by hand: screen-rotation
+layout shifts and dynamic font-resize bounds. Long-decimal results are shown
+numerically unformatted (e.g. `√2` → `1.4142135623730951`) and now wrap
+within the card rather than being clipped; numeric formatting of the result
+remains out of scope.
 
 ## Testing
 
@@ -211,17 +228,17 @@ npm run test:coverage    # vitest run --coverage
 Vitest + React Testing Library, driving behaviour through the DOM: each
 operation's happy path, the ADR-0004 input edge cases, backend errors
 surfaced in the UI (e.g. division by zero, plus a non-OK or malformed
-response body), and an in-flight request abandoned on `Clear`. Coverage
-(v8 provider), 30 tests:
+response body), an in-flight request abandoned on `Clear`, the
+pending-expression line, and the `matchMedia`-driven layout switch. Coverage
+(v8), 38 tests:
 
 | Metric | Coverage |
 | --- | --- |
-| Statements | 98.07% |
-| Branches | 94.17% |
+| Statements | 98.45% |
+| Branches | 95.23% |
 | Functions | 100% |
-| Lines | 98.07% |
+| Lines | 98.45% |
 
-Every file except one reports 100%: `src/hooks/useCalculator.ts` (96.79%).
-Its uncovered lines are defensive fallbacks and unreachable reducer guards —
-a non-`Error` thrown value and status branches the UI flow cannot reach
-(buttons are disabled while a request is in flight).
+Uncovered lines are defensive fallbacks only (a non-`Error` thrown value; a
+malformed backend response body; reducer guards unreachable while the buttons
+are disabled).

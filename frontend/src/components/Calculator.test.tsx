@@ -358,3 +358,29 @@ describe("in-flight requests", () => {
     await expectDisplay("5");
   });
 });
+
+describe("pending-expression line", () => {
+  it("shows the left operand and operator while a binary operation is pending", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await press(user, "12+");
+    expect(screen.getByText("12 +")).toBeInTheDocument();
+  });
+
+  it("uses the button glyph for the operator (^ for exponentiation)", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await press(user, "2^");
+    expect(screen.getByText("2 ^")).toBeInTheDocument();
+  });
+
+  it("clears the expression once equals resolves", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await press(user, "2+3");
+    expect(screen.getByText("2 +")).toBeInTheDocument();
+    await press(user, "=");
+    await expectDisplay("5");
+    expect(screen.queryByText("2 +")).not.toBeInTheDocument();
+  });
+});
