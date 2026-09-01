@@ -1,0 +1,54 @@
+# Verification only — runs backend and frontend tests with coverage on every
+# push to main and every PR. No build, publish, or deploy steps (ADR-0006).
+# Each job skips gracefully until its side is scaffolded.
+
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - name: Test
+        run: |
+          if [ -f go.mod ]; then
+            go test ./... -cover
+          else
+            echo "backend not scaffolded yet (no go.mod) — skipping"
+          fi
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - name: Install
+        run: |
+          if [ -f package.json ]; then
+            npm ci
+          else
+            echo "frontend not scaffolded yet (no package.json) — skipping install"
+          fi
+      - name: Test
+        run: |
+          if [ -f package.json ]; then
+            npx vitest run --coverage
+          else
+            echo "frontend not scaffolded yet (no package.json) — skipping tests"
+          fi

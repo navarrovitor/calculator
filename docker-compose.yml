@@ -1,0 +1,19 @@
+# OPTIONAL — skeleton only. Ports, environment, and depends_on are commented
+# TODOs pending real Dockerfiles (backend/Dockerfile, frontend/Dockerfile).
+
+services:
+  backend:
+    build: ./backend
+    # ports:
+    #   - "8080:8080"
+    # environment:
+    #   - PORT=8080
+
+  frontend:
+    build: ./frontend
+    # ports:
+    #   - "5173:80"
+    # environment:
+    #   - API_BASE_URL=http://backend:8080
+    # depends_on:
+    #   - backend
