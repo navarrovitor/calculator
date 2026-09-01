@@ -356,3 +356,58 @@ cleanups (tokens/component split, `aria-label` selectors instead of
 
 **Outcome:**
 <!-- author -->
+
+### D002 — Frontend design parity: the deferred handoff items
+*(2026-09-01, design)*
+
+**Prompt:**
+On a branch based on `style/frontend-redesign` (not `main`), implement the
+five items D001 deferred as needing markup/state changes — in one branch:
+(1) the pending-expression line above the display; (2) a single interleaved
+keypad grid in the handoff's key order; (3) the in-display error treatment,
+kept persistent (no auto-dismiss timer, chosen over the prototype's transient
+behaviour to preserve ADR-0005 and the existing tests); (4) viewport-driven
+switching to the mobile bottom-sheet layout; (5) the `x^y` → `^` glyph.
+
+**Response summary:**
+Branch `feat/calculator-design-parity` off `style/frontend-redesign`.
+
+- `src/hooks/useCalculator.ts` — the hook now returns `expression`, a
+  `"<accumulator> <operator-glyph>"` string derived from state (empty when no
+  binary op is pending). New `OPERATOR_SYMBOL` map. No change to the reducer,
+  the request flow, or any existing return value.
+- `src/hooks/useMediaQuery.ts` (new) — a small `matchMedia` hook that returns
+  `false` where `matchMedia` is absent (jsdom/SSR) rather than throwing.
+- `src/App.tsx` — reads `useMediaQuery("(max-width: 480px)")` and adds
+  `app--compact` to `<main>`; the bottom-sheet CSS moved from an `@media`
+  block onto that class.
+- `src/components/Calculator.tsx` — one `KEYS` list rendered into a single
+  5-column grid in the handoff's order (`7 8 9 ÷ C` / `4 5 6 × √` /
+  `1 2 3 − ^` / `0 . = + %`). Each button gets a semantic
+  `calculator__key--{digit,operation,advanced,equals,clear}` class (advanced =
+  the sage set: exponentiation, percentage, sqrt). Exponentiation's glyph is
+  now `^`. All accessible names unchanged.
+- `src/components/Display.tsx` — renders the `expression` line above the
+  value; the value gets `calculator__value--muted` while an error shows. The
+  `role="alert"` element and its persist-until-Clear/next-digit behaviour are
+  unchanged.
+- `src/styles/calculator.css` — single-grid keypad, `--key--*` variants,
+  `.calculator__expression`, `.calculator__value--muted`, `.app--compact`.
+
+Tests: the 28 existing DOM tests pass **unmodified**; added
+`pending-expression line` cases (Calculator.test.tsx), `useMediaQuery`
+(hook unit test), and `App layout` (centered vs compact class). 36 tests,
+coverage 97.42% stmts / 93.38% branch / 100% funcs; App/Calculator/Display/
+useMediaQuery at 100%, remaining gaps are the same pre-existing defensive
+fallbacks in `useCalculator.ts` / `api.ts`.
+
+README updated (Overview, frontend assumptions, manual-QA note, Testing
+figures) for the now user-facing behaviour. No ADR change: the persistent
+error keeps ADR-0005 intact and the expression line stays within ADR-0004
+(all state in the hook).
+
+**My review:**
+<!-- author -->
+
+**Outcome:**
+<!-- author -->
