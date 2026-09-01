@@ -60,11 +60,13 @@ func classify(err error) *Error {
 	}
 	switch {
 	case errors.Is(err, calc.ErrOperandCount):
-		return BadRequest(err.Error())
-	case errors.Is(err, calc.ErrUnsupportedOperation),
-		errors.Is(err, calc.ErrDivisionByZero),
-		errors.Is(err, calc.ErrNonFiniteResult):
-		return Unprocessable(err.Error())
+		return BadRequest(calc.ErrOperandCount.Error())
+	case errors.Is(err, calc.ErrUnsupportedOperation):
+		return Unprocessable(calc.ErrUnsupportedOperation.Error())
+	case errors.Is(err, calc.ErrDivisionByZero):
+		return Unprocessable(calc.ErrDivisionByZero.Error())
+	case errors.Is(err, calc.ErrNonFiniteResult):
+		return Unprocessable(calc.ErrNonFiniteResult.Error())
 	default:
 		return &Error{Status: http.StatusInternalServerError, Message: "internal server error"}
 	}

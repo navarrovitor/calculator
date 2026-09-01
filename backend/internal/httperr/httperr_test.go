@@ -47,11 +47,9 @@ func TestWriteStatusMapping(t *testing.T) {
 		{"unsupported operation sentinel", calc.ErrUnsupportedOperation, http.StatusUnprocessableEntity, calc.ErrUnsupportedOperation.Error()},
 		{"division by zero sentinel", calc.ErrDivisionByZero, http.StatusUnprocessableEntity, calc.ErrDivisionByZero.Error()},
 		{"non-finite result sentinel", calc.ErrNonFiniteResult, http.StatusUnprocessableEntity, calc.ErrNonFiniteResult.Error()},
-		// A wrapped sentinel still maps to the right status via errors.Is;
-		// the body currently carries the wrapped message verbatim. The
-		// handler passes calc errors through unwrapped, so this only bites
-		// if future code adds context before calling Write.
-		{"wrapped sentinel", fmt.Errorf("context: %w", calc.ErrDivisionByZero), http.StatusUnprocessableEntity, "context: division by zero"},
+		// A wrapped sentinel maps to the right status via errors.Is, and the
+		// body carries the sentinel's own message, not the wrapping context.
+		{"wrapped sentinel", fmt.Errorf("context: %w", calc.ErrDivisionByZero), http.StatusUnprocessableEntity, calc.ErrDivisionByZero.Error()},
 		{"unrecognised error", errors.New("boom"), http.StatusInternalServerError, "internal server error"},
 	}
 	for _, tt := range tests {
