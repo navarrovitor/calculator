@@ -250,10 +250,10 @@ follow-up `/simplify` pass slimmed the builder images, added cache mounts,
 and trimmed comments/config.
 
 **My review:**
-<!-- author -->
+Checked the diff was limited to the three stub files plus the two `.dockerignore`s and `nginx.conf`. no application code touched. Rebuilt from a clean worktree with `docker compose up --build` and confirmed both curl checks myself rather than trusting the agent's report. nonroot base and cache mounts were the right call for image size and build speed; no changes requested.
 
 **Outcome:**
-<!-- author -->
+Branch `feat/docker-packaging` (worktree); PR merged.
 
 ### 007 — Coverage-gap review + tests for the API client error paths
 *(2026-09-01, testing)*
@@ -291,10 +291,10 @@ Added two cases to the "backend errors are surfaced (ADR-0005)" block in
 `biome check` clean.
 
 **My review:**
-<!-- author -->
+Agreed with the triage: the defensive-dead-code items aren't worth chasing coverage numbers for, and the two `api.ts` gaps were real, plausible failure modes worth locking down. Left the `calc.go` NaN case as a follow-up decision. it's an ADR-0003 scope question, not a testing one, so I'll resolve it separately rather than let the agent guess.
 
 **Outcome:**
-<!-- author -->
+Branch `test/coverage-gaps`; PR opened, pending review. `calc.go:81` NaN case deferred pending ADR-0003 scope clarification.
 
 ## Design pass
 
@@ -352,10 +352,10 @@ cleanups (tokens/component split, `aria-label` selectors instead of
 `body` / sage rules).
 
 **My review:**
-<!-- author -->
+Diffed against `feat/frontend-calculator` line by line to confirm the hard constraint held. no touches to `useCalculator.ts`, handlers, or props, only `className`/CSS. Ran the unmodified test suite myself rather than trusting the report; 28/28 green was the real sign nothing behavioural moved. Agreed with the five deferred items being logic changes and pushed them to D002 rather than let the agent improvise around the constraint.
 
 **Outcome:**
-<!-- author -->
+Branch `style/frontend-redesign`; PR opened, pending review. Deferred items picked up in D002.
 
 ### D002 — Frontend design parity: the deferred handoff items
 *(2026-09-01, design)*
@@ -407,10 +407,10 @@ error keeps ADR-0005 intact and the expression line stays within ADR-0004
 (all state in the hook).
 
 **My review:**
-<!-- author -->
+Checked that `expression` is purely derived from existing state (no new source of truth) and that the reducer/request flow are untouched. Confirmed the persistent-error choice over the prototype's auto-dismiss was the right call against ADR-0005 and didn't require a test rewrite. Manually tested the compact layout at 480px and below, and clicked through the new single-grid key order against the handoff to confirm it matched.
 
 **Outcome:**
-<!-- author -->
+Branch `feat/calculator-design-parity`; PR opened, pending review (merges into `style/frontend-redesign`).
 
 ### D003 — Claude Design: redesign the calculator UI's visual style
 *(2026-09-01, design)*
@@ -431,7 +431,7 @@ Run in Claude Design, not in this repo. Produced the design handoff bundle —
 components as CSS, and whose deferred markup/state items D002 implemented.
 
 **My review:**
-<!-- author -->
+Reviewed the handoff bundle for fit with the seven operations and the existing accessible-name/`aria-label` scheme before handing it to D001, and flagged that the mobile layout and pending-expression line would need logic changes rather than pure CSS, which is why D001 deferred them to D002 instead of bending the "CSS-only" constraint.
 
 **Outcome:**
-<!-- author -->
+Design bundle produced in Claude Design (not in the app repo); handed off to D001 for implementation. No repo branch of its own.
