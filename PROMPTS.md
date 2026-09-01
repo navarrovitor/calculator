@@ -112,6 +112,80 @@ Bigger PR to review considering code and tests were added by the same prompt. Te
 **Outcome:**
 Branch `feat/optional-operations`; PR merged.
 
+### 004 — Frontend functional pass: button-grid calculator
+*(2026-09-01, implementation & testing)*
+
+**Prompt:**
+Create branch `feat/frontend-calculator`. Implement the button-grid calculator
+UI per ADR-0004 and ADR-0005 and the CLAUDE.md TS/React conventions — functional
+pass only, plain semantic markup, minimal/no CSS. Function components + hooks,
+strict TS, no `any`. All calculator state (input buffer, pending operator,
+chaining, redundant `=`) in a single `useCalculator` hook; components
+presentational. API contract types in `src/types.ts`, shared by `api.ts` and the
+hook. Wire to the real backend `POST /calculate` (not mocked). Shallow client
+validation only (empty/non-numeric); surface every backend 400/422. Handle the
+ADR-0004 input edge cases. Support all seven operations, `sqrt` as a unary
+button. Biome-clean. Show the diff before committing. Then add Vitest + RTL
+tests (behaviour via the DOM): each operation happy path, the input edge cases,
+and a backend-error-surfaced case; run `vitest run --coverage` and report. Then
+run `/code-review` and `/simplify` against the branch, output every finding
+unfiltered, apply no fix without explicit approval. For the PR: this log entry,
+README "Running the app" + frontend assumptions, open the PR without merging.
+
+**Response summary:**
+Scaffolded `frontend/` (Vite + React 19 + TS strict, Biome, Vitest + RTL, v8
+coverage; Vite dev-server proxy `/calculate` → `:8080`).
+
+- `src/types.ts` — `Operation` union, `BinaryOperation`, `CalculateRequest` /
+  `CalculateResponse` / `CalculateErrorResponse`. Shared by `api.ts` and the
+  hook.
+- `src/lib/api.ts` — `calculate()` POSTs to `/calculate`, resolves the numeric
+  result, throws `CalculationError` with the backend `{"error"}` message
+  verbatim on any non-2xx and a generic message on transport failure.
+- `src/hooks/useCalculator.ts` — all input state in one `useReducer`
+  (`buffer` / `accumulator` / `pendingOp` / `lastResult` / `overwrite` /
+  `error`); async handlers read fresh state via a ref, call `calculate()`, then
+  dispatch. Edge cases: 2nd decimal ignored, leading zeros collapse, repeated
+  operator swaps the pending op, chained operators evaluate left-to-right (one
+  backend call each), trailing operator on `=` reuses the left operand,
+  redundant `=` / empty submission no-op, `sqrt` unary and immediate.
+- `src/components/Calculator.tsx` (container, reads the hook) + `Display.tsx`
+  (presentational). Operation buttons carry `aria-label` = backend op name.
+  `App.tsx` renders `<h1>` + `<Calculator/>`. No CSS.
+
+Tests (`Calculator.test.tsx`, 27, behaviour through the DOM): the seven
+operations, the input edge cases, backend errors surfaced (division by zero,
+negative sqrt, transport failure), client validation of empty `sqrt`, and an
+in-flight request abandoned on `Clear`. `biome check` and `tsc --noEmit` clean.
+Coverage (v8): 98.13% stmts / 94.62% branch / 100% funcs / 98.13% lines;
+remaining lines are defensive fallbacks.
+
+`/code-review`: 2 code findings — (1) `Clear` did not abandon an in-flight
+request, so a late result/error landed on cleared state; (2) `√` on a
+half-entered operation (`2 + √`) rooted the left operand and injected it as the
+right operand. Plus a stray committed `tmp/build-errors.log` (removed
+separately).
+`/simplify`: reuse — twin type guards in `api.ts`, the operand-fallback ladder
+written three times; simplification — `stateRef`/`useEffect`/`useCallback`
+scaffolding, unused `pendingOperation` return, three near-identical operator
+reducer cases, nested ternaries; altitude — actions named as scenarios not
+intents, `buffer` overloaded with computed values, unary/binary split by name
+rather than arity.
+
+Applied (author-approved): request-id guard in `runCompute` + `clear()`
+invalidates in-flight work; `√` on a half-entered op is treated as empty input
+("Enter a number first."); `overwrite` flag so a digit after a computed value
+starts fresh; shared `committedValue(state)` helper for the display and the
+`sqrt` source; removed the unused `pendingOperation`. Deferred to a later
+prompt: reworking the reducer to intent-level actions and unifying unary/binary
+dispatch by arity (`/simplify` altitude findings).
+
+**My review:**
+<!-- author -->
+
+**Outcome:**
+<!-- author -->
+
 ## Design pass
 
 Design-pass prompts (the visual restyling pass in CLAUDE.md) are logged here
