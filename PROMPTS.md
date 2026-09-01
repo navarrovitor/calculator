@@ -222,4 +222,58 @@ Applying /simplify finding before actually applying Claude Design's frontend.
 Design-pass prompts (the visual restyling pass in CLAUDE.md) are logged here
 with `D001`-style numbering, using the same template fields.
 
-_None logged yet._
+### D001 — Frontend visual restyle: Organic design-system handoff
+*(2026-09-01, design)*
+
+**Prompt:**
+Create branch `style/frontend-redesign`. Apply the visual changes from a
+Claude Design handoff bundle (`Calculator.dc.html` + the "Organic" design
+system: `_ds_bundle.js`, `styles.css`, `support.js`) to the existing
+components, following CLAUDE.md conventions (Biome-clean, function components
++ hooks). Hard constraint: no change to component structure, state logic, the
+`useCalculator` hook, event handlers, or props — behaviour identical before
+and after; only CSS/styles, `className` changes, and purely presentational
+markup. Flag anything that would need a logic change instead of making it.
+Show the diff before committing. Then run `vitest run --coverage` unchanged
+(passing with no test edits is the behaviour-unchanged check) and run
+`/code-review` + `/simplify`, reporting every finding unfiltered; apply no fix
+without approval. For the PR: this log entry, README update only if
+user-facing behaviour changed, open without merging.
+
+**Response summary:**
+The handoff MCP was unreachable in this environment; implemented from a local
+copy of the bundle instead.
+
+- `frontend/src/styles/organic.css` — the handoff design-system stylesheet,
+  vendored verbatim, kept **unimported** as reference / re-sync source.
+- `frontend/src/styles/tokens.css` — the `:root` token block plus the base
+  rules the app actually uses, curated from the handoff; the file imported at
+  runtime. Web fonts moved to `<link rel="preconnect">` + `<link>` in
+  `index.html` (off the CSS critical path).
+- `frontend/src/styles/calculator.css` — the calculator's own styling built on
+  the tokens: warm-cream page shell, rounded `--color-neutral-100` card with
+  `--shadow-lg`, right-aligned display, three key grids (digits / operations /
+  actions) with neutral / accent / sage / solid-accent button variants keyed
+  off each button's `aria-label`, themed hover / `:active` scale / disabled,
+  and a `≤480px` bottom-sheet layout.
+- Components: `className`-only edits to `App.tsx`, `Calculator.tsx`,
+  `Display.tsx`; two CSS imports added to `main.tsx`. No logic, handler, prop,
+  or structural change.
+
+Flagged as needing logic (not done in this pass): the pending-expression line
+above the display, a single interleaved keypad grid, a transient
+auto-clearing in-display error, JS-driven mobile layout switching, and the
+`x^y` → `^` glyph.
+
+All 28 Vitest tests pass with no modifications; coverage unchanged
+(96.79% stmts / 91.83% branch / 100% funcs). `/code-review` (5 findings) and
+`/simplify` (4 agents) reported in full; a follow-up commit applied the agreed
+cleanups (tokens/component split, `aria-label` selectors instead of
+`:nth-child`, long-result wrapping instead of clipping, dedup of duplicated
+`body` / sage rules).
+
+**My review:**
+<!-- author -->
+
+**Outcome:**
+<!-- author -->
