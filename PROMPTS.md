@@ -67,6 +67,41 @@ _Pending author review._
 Branch `feat/calculate-endpoint`; PR opened, pending review. Tests follow in
 prompt 002.
 
+### 002 — Tests for POST /calculate (add, subtract, multiply, divide)
+*(2026-09-01, testing)*
+
+**Prompt:**
+Add tests for the `POST /calculate` endpoint, covering only the four
+implemented operations. Follow CLAUDE.md: table-driven, one table per
+behaviour, assert the status code per case. Cover each operation's happy path;
+division by zero -> 422; missing / non-numeric / wrong-count operands -> 400;
+malformed JSON -> 400; unsupported operation -> 422. Test across
+`internal/calc`, `internal/httperr`, and `internal/api`. Run
+`go test ./... -cover`, `gofmt -l`, `go vet ./...` and report results.
+
+**Response summary:**
+Added three `_test.go` files on the same branch (tests land with the code
+they cover; PR #1 still open):
+- `internal/calc/calc_test.go` — `TestCalculateOperations` (happy paths),
+  `TestCalculateErrors` (division by zero, unsupported name, operand count,
+  overflow), asserting the sentinel via `errors.Is`.
+- `internal/httperr/httperr_test.go` — `TestErrorMessage` and
+  `TestWriteStatusMapping` (helper errors and wrapped/unwrapped calc
+  sentinels -> status + `{"error"}` body + Content-Type).
+- `internal/api/api_test.go` — `TestCalculateSuccess`,
+  `TestCalculateErrorStatus` (10 malformed/invalid cases by status code),
+  `TestCalculateMethodNotAllowed` (405 + `Allow` header).
+
+`gofmt -l` clean, `go vet ./...` clean. Coverage: `internal/calc` 100.0%,
+`internal/httperr` 100.0%, `internal/api` 100.0%, `cmd/server` 0.0%
+(entrypoint only).
+
+**My review:**
+_Pending author review._
+
+**Outcome:**
+Pushed to branch `feat/calculate-endpoint` (PR #1).
+
 ## Design pass
 
 Design-pass prompts (the visual restyling pass in CLAUDE.md) are logged here

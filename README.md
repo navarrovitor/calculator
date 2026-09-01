@@ -119,5 +119,22 @@ the frontend pass.
 -->
 ## Testing
 
-Backend tests and coverage numbers land in the next prompt; the frontend
-follows. This section is filled with real figures once those exist.
+**Backend:**
+
+```sh
+cd backend
+go test ./... -cover
+```
+
+Table-driven tests cover `internal/calc`, `internal/httperr`, and
+`internal/api` (the four operations, the status-code split, and the error
+body shape). Coverage by package:
+
+| Package | Coverage |
+| --- | --- |
+| `internal/calc` | 100.0% |
+| `internal/httperr` | 100.0% |
+| `internal/api` | 100.0% |
+| `cmd/server` | 0.0% (entrypoint only — `main` starts the listener) |
+
+**Frontend:** tests land with the frontend pass.
