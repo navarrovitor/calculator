@@ -19,6 +19,9 @@ node_modules/
 .env.*
 !.env.example
 
+# --- Docker ---
+docker-compose.override.yml
+
 # --- Editor / OS ---
 .DS_Store
 .idea/

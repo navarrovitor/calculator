@@ -1,5 +1,5 @@
-# Brings up the calculator API and UI. The frontend's nginx proxies
-# /calculate to the backend service over the shared compose network.
+# Runs the calculator API and UI. The frontend's nginx proxies /calculate to
+# the backend over the shared network, so the browser stays same-origin.
 #
 #   docker compose up --build
 #
@@ -10,27 +10,12 @@ services:
     build: ./backend
     ports:
       - "8080:8080"
-    environment:
-      - PORT=8080
 
   frontend:
-    build:
-      context: ./frontend
-      secrets:
-        - ca
+    build: ./frontend
     ports:
       - "5173:80"
-    # Start ordering only. The backend runtime is distroless (no shell/curl),
-    # so there is no healthcheck to gate on; nginx re-resolves `backend` per
-    # request (see nginx.conf), so a backend that binds a moment later just
-    # yields a transient 502 that self-heals.
+    # Start ordering only; nginx re-resolves `backend` per request (see
+    # nginx.conf), so a slightly-late backend just yields a transient 502.
     depends_on:
       - backend
-
-# Extra CA roots for the frontend's `npm ci`, only needed behind a
-# TLS-inspecting proxy. Defaults to an empty file (no-op); point
-# DOCKER_CA_BUNDLE at a PEM bundle to enable — e.g.
-#   DOCKER_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt docker compose build
-secrets:
-  ca:
-    file: ${DOCKER_CA_BUNDLE:-/dev/null}

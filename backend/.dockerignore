@@ -1,5 +1,6 @@
 Dockerfile
 .dockerignore
+**/*_test.go
 bin/
 dist/
 *.out

@@ -230,23 +230,26 @@ able to reach the backend. Show the diff before committing; update the
 README Setup/Running sections once it works.
 
 **Response summary:**
-- `backend/Dockerfile` — `golang:1.26` builder (`CGO_ENABLED=0`, `-trimpath`,
-  stripped) → `gcr.io/distroless/static-debian12:nonroot`, `ENTRYPOINT
-  ["/server"]`, `EXPOSE 8080`. `COPY go.mod go.su[m]` wildcard since there is
-  no `go.sum` yet. Image ~15 MB.
-- `frontend/Dockerfile` — `node:22` builder runs `npm ci` + `npm run build`
-  → `nginx:alpine` serving `/app/dist` with `nginx.conf` (SPA fallback +
-  `location /calculate` proxying to `http://backend:8080`). Image ~94 MB.
-  Optional `ca` build secret so `npm ci` works behind a TLS-inspecting proxy.
-- `docker-compose.yml` — `backend` (8080:8080, `PORT=8080`) and `frontend`
-  (5173:80, `depends_on` backend); top-level `ca` secret sourced from
-  `${DOCKER_CA_BUNDLE:-/dev/null}`.
-- Added `backend/.dockerignore`, `frontend/.dockerignore`, `frontend/nginx.conf`.
+- `backend/Dockerfile` — `golang:1.26-alpine` builder (`CGO_ENABLED=0`,
+  `-trimpath`, stripped, `--mount=type=cache` for build/mod) →
+  `gcr.io/distroless/static-debian12:nonroot`, `EXPOSE 8080`. Image ~15 MB.
+- `frontend/Dockerfile` — `node:22-slim` builder runs `npm ci`
+  (`--mount=type=cache`) + `npm run build` → `nginx:alpine` serving
+  `/app/dist` with `nginx.conf` (SPA fallback + `location /calculate`
+  proxying to `backend:8080`, per-request DNS re-resolution). Image ~94 MB.
+- `docker-compose.yml` — `backend` (8080:8080) and `frontend` (5173:80,
+  `depends_on` backend). Optional `ca` build secret for TLS-inspecting
+  proxies lives in `docker-compose.override.yml.example` (gitignored when
+  copied), keeping the committed compose file clean.
+- Added `backend/.dockerignore`, `frontend/.dockerignore`,
+  `frontend/nginx.conf`, `docker-compose.override.yml.example`.
 - README: new "With Docker" subsection under Running, plus a Setup pointer.
 
 Verified: `docker compose up --build` brings both up;
 `curl localhost:5173/calculate` returns `200`/`422` from the backend through
-the nginx proxy; `curl localhost:8080/calculate` direct also works.
+the nginx proxy; `curl localhost:8080/calculate` direct also works. A
+follow-up `/simplify` pass slimmed the builder images, added cache mounts,
+moved the CA secret to the override template, and trimmed comments/config.
 
 **My review:**
 <!-- author -->
