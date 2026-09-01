@@ -19,7 +19,8 @@ Design.
 ## Setup
 
 **Prerequisites:** Go 1.26+ (`backend/go.mod` declares `go 1.26`); Node.js
-20+ with npm (frontend).
+20+ with npm (frontend). Or just Docker — see
+[With Docker](#with-docker), which needs neither toolchain installed.
 
 **Backend:**
 
@@ -65,6 +66,21 @@ Vite serves the UI on `http://localhost:5173` and proxies `POST /calculate`
 to the backend (default `http://localhost:8080`, override with
 `VITE_API_PROXY_TARGET`) so the browser always talks to a same-origin path.
 Start the backend first.
+
+### With Docker
+
+`Dockerfile`s for each side (multi-stage: Go builder → `distroless/static`
+for the backend, Node builder → nginx for the frontend) plus a
+`docker-compose.yml` that runs both:
+
+```sh
+docker compose up --build
+```
+
+Frontend on `http://localhost:5173`, backend on `http://localhost:8080`. The
+frontend's nginx serves the built assets and proxies `/calculate` to the
+`backend` container, so the browser still talks to a same-origin path — no
+`VITE_API_PROXY_TARGET` needed.
 
 ## API Examples
 

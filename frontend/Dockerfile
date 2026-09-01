@@ -1,17 +1,16 @@
-# OPTIONAL deliverable — shape only, not a working build.
-# TODO: multi-stage build.
-#
-# Builder stage:
-#   FROM node:<version> AS build
-#   WORKDIR /app
-#   COPY package.json package-lock.json ./
-#   RUN npm ci
-#   COPY . .
-#   RUN npm run build              # outputs /app/dist
-#
-# Runtime stage (open decision: static file server vs. vite preview):
-#   FROM nginx:alpine             (or a static file server)
-#   COPY --from=build /app/dist /usr/share/nginx/html
-#   EXPOSE 80
+# syntax=docker/dockerfile:1
+# Multi-stage build for the calculator UI: Node builder -> nginx static serve.
 
-FROM scratch
+FROM node:22-slim AS build
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN --mount=type=cache,target=/root/.npm npm ci
+
+COPY . .
+RUN npm run build
+
+FROM nginx:alpine
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/dist /usr/share/nginx/html
+EXPOSE 80
