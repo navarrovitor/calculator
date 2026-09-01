@@ -1,24 +1,12 @@
 /*
  * Visual restyling pass — Organic design system (Claude Design handoff).
- * Styling only: every value is taken from the tokens in organic.css. No
+ * Styling only: every value is taken from the tokens in tokens.css. No
  * component logic, state, or markup structure is affected by this file.
+ * Button variants key off each button's stable aria-label, not DOM order.
  */
-
-html,
-body,
-#root {
-  height: 100%;
-}
-
-body {
-  background: var(--color-bg);
-  color: var(--color-text);
-  font-family: var(--font-body);
-}
 
 /* — page shell — */
 .app {
-  box-sizing: border-box;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -29,14 +17,12 @@ body {
 }
 
 .app h1 {
-  margin: 0;
   text-align: center;
   color: var(--color-accent);
 }
 
 /* — calculator card — */
 .calculator {
-  box-sizing: border-box;
   width: 380px;
   max-width: 100%;
   display: flex;
@@ -59,20 +45,19 @@ body {
 .calculator__value {
   display: block;
   min-height: 56px;
-  font-family: var(--font-body);
   font-weight: 700;
   font-size: 44px;
   line-height: 1.1;
   text-align: right;
   color: var(--color-text);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  /* Long results wrap inside the card rather than being clipped — the
+     handoff prototype used nowrap + ellipsis, which silently hid the
+     leading digits of a right-aligned number. */
+  overflow-wrap: anywhere;
 }
 
 .calculator__error {
   margin: 0;
-  font-family: var(--font-body);
   font-size: 15px;
   text-align: right;
   letter-spacing: 0.02em;
@@ -103,7 +88,6 @@ body {
   border: none;
   cursor: pointer;
   aspect-ratio: 1;
-  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -133,45 +117,47 @@ body {
   background: var(--color-neutral-300);
 }
 
-/* core operations (add, subtract, multiply, divide): accent tint */
-.calculator__keys--operations button:nth-child(-n + 4) {
+/* operations: accent tint (the group default) */
+.calculator__keys--operations button {
   background: var(--color-accent-100);
   color: var(--color-accent-700);
 }
 
-.calculator__keys--operations button:nth-child(-n + 4):hover:not(:disabled) {
+.calculator__keys--operations button:hover:not(:disabled) {
   background: var(--color-accent-200);
 }
 
-/* secondary operations (exponentiation, percentage, square root): sage tint */
-.calculator__keys--operations button:nth-child(n + 5) {
+/* advanced operations + clear: sage tint */
+.calculator__keys--operations button[aria-label="exponentiation"],
+.calculator__keys--operations button[aria-label="percentage"],
+.calculator__keys--operations button[aria-label="square root"],
+.calculator__keys--actions button[aria-label="clear"] {
   background: var(--color-accent-2-100);
   color: var(--color-accent-2-700);
-  font-size: 19px;
 }
 
-.calculator__keys--operations button:nth-child(n + 5):hover:not(:disabled) {
+.calculator__keys--operations button[aria-label="exponentiation"]:hover:not(:disabled),
+.calculator__keys--operations button[aria-label="percentage"]:hover:not(:disabled),
+.calculator__keys--operations button[aria-label="square root"]:hover:not(:disabled),
+.calculator__keys--actions button[aria-label="clear"]:hover:not(:disabled) {
   background: var(--color-accent-2-200);
 }
 
+/* advanced-operation glyphs sit a touch smaller */
+.calculator__keys--operations button[aria-label="exponentiation"],
+.calculator__keys--operations button[aria-label="percentage"],
+.calculator__keys--operations button[aria-label="square root"] {
+  font-size: 19px;
+}
+
 /* equals: solid accent */
-.calculator__keys--actions button:first-child {
+.calculator__keys--actions button[aria-label="equals"] {
   background: var(--color-accent);
   color: var(--color-bg);
 }
 
-.calculator__keys--actions button:first-child:hover:not(:disabled) {
+.calculator__keys--actions button[aria-label="equals"]:hover:not(:disabled) {
   background: var(--color-accent-600);
-}
-
-/* clear: sage tint */
-.calculator__keys--actions button:last-child {
-  background: var(--color-accent-2-100);
-  color: var(--color-accent-2-700);
-}
-
-.calculator__keys--actions button:last-child:hover:not(:disabled) {
-  background: var(--color-accent-2-200);
 }
 
 /* — narrow screens: dock the card as a bottom sheet — */
