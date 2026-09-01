@@ -292,6 +292,29 @@ describe("backend errors are surfaced (ADR-0005)", () => {
       "Could not reach the calculator service.",
     );
   });
+
+  it("surfaces a non-OK response whose body is not the shared error shape", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response("<html>502 Bad Gateway</html>", {
+        status: 502,
+        headers: { "Content-Type": "text/html" },
+      }),
+    );
+    const user = userEvent.setup();
+    render(<App />);
+    await press(user, "2+3=");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Request failed (502).");
+  });
+
+  it("surfaces an OK response whose body is not a numeric result", async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse({ unexpected: true }, 200));
+    const user = userEvent.setup();
+    render(<App />);
+    await press(user, "2+3=");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Received an unexpected response from the service.",
+    );
+  });
 });
 
 describe("in-flight requests", () => {
