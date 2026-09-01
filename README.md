@@ -230,14 +230,14 @@ operation's happy path, the ADR-0004 input edge cases, backend errors
 surfaced in the UI (e.g. division by zero, plus a non-OK or malformed
 response body), an in-flight request abandoned on `Clear`, the
 pending-expression line, and the `matchMedia`-driven layout switch. Coverage
-(v8), PLACEHOLDER_COUNT tests:
+(v8), 38 tests:
 
 | Metric | Coverage |
 | --- | --- |
-| Statements | PLACEHOLDER_STMT |
-| Branches | PLACEHOLDER_BRANCH |
-| Functions | PLACEHOLDER_FUNC |
-| Lines | PLACEHOLDER_LINES |
+| Statements | 98.45% |
+| Branches | 95.23% |
+| Functions | 100% |
+| Lines | 98.45% |
 
 Uncovered lines are defensive fallbacks only (a non-`Error` thrown value; a
 malformed backend response body; reducer guards unreachable while the buttons
