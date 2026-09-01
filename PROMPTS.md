@@ -411,3 +411,27 @@ error keeps ADR-0005 intact and the expression line stays within ADR-0004
 
 **Outcome:**
 <!-- author -->
+
+### D003 — Claude Design: redesign the calculator UI's visual style
+*(2026-09-01, design)*
+
+Logged after D001/D002 but chronologically upstream of them: this is the
+prompt run in Claude Design that produced the handoff bundle D001 applied.
+
+**Prompt:**
+Import this repo. Redesign the calculator UI's visual style — layout,
+spacing, color, typography, responsive/mobile behavior. It's a button-grid
+calculator supporting add, subtract, multiply, divide, exponentiation,
+sqrt (unary), percentage.
+
+**Response summary:**
+Run in Claude Design, not in this repo. Produced the design handoff bundle —
+`Calculator.dc.html` plus the "Organic" design system (`_ds_bundle.js`,
+`styles.css`, `support.js`) — that D001 vendored and applied to the
+components as CSS, and whose deferred markup/state items D002 implemented.
+
+**My review:**
+<!-- author -->
+
+**Outcome:**
+<!-- author -->

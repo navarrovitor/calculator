@@ -10,13 +10,21 @@ source of truth for every calculation; the UI never does arithmetic locally
 
 The API is one endpoint, `POST /calculate`, covering all seven operations
 (ADR-0003): `add`, `subtract`, `multiply`, `divide`, `exponentiation`,
-`sqrt`, `percentage`. The frontend is built in two passes (see CLAUDE.md): a
-functional pass — the button-grid calculator wired to the endpoint
-(ADR-0004) — and a visual restyling pass that applies a design-system handoff
-as CSS only, with no behaviour change, plus a follow-up pass implementing the
-handoff items that needed markup/state changes: a pending-expression line
-above the display, a single-grid keypad in the handoff's key order, and a
-viewport-driven mobile layout. The visual work was done with Claude Design.
+`sqrt`, `percentage`.
+
+The frontend is built in passes (see CLAUDE.md):
+
+- **Functional pass** — the button-grid calculator wired to the endpoint
+  (ADR-0004): plain semantic markup, no visual effort.
+- **Visual restyling pass** — a Claude Design design-system handoff applied
+  as CSS / `className` only, with behaviour identical before and after.
+- **Design-parity follow-up** — the handoff items that needed markup/state
+  changes: a pending-expression line above the display, a single-grid keypad
+  in the handoff's key order, and a viewport-driven mobile layout.
+
+Every prompt given to the AI agent, and its outcome, is recorded in
+[PROMPTS.md](PROMPTS.md) — implementation and testing prompts numbered
+`001`, `002`, …; design-pass prompts `D001`, `D002`, … .
 
 ## Setup
 
