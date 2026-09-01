@@ -9,7 +9,7 @@ import (
 
 // ErrOperandCount indicates the operand count does not match the operation's
 // arity. The HTTP layer maps it to 400 (malformed input).
-var ErrOperandCount = errors.New("expected exactly 2 operands")
+var ErrOperandCount = errors.New("wrong operand count for operation")
 
 // ErrNonFiniteResult indicates the operation overflowed float64 or is
 // otherwise not a finite number. The HTTP layer maps it to 422 (well-formed
@@ -24,33 +24,57 @@ var ErrUnsupportedOperation = errors.New("unsupported operation")
 // maps it to 422 (well-formed request, invalid calculation).
 var ErrDivisionByZero = errors.New("division by zero")
 
+// ErrNegativeSqrt indicates a square root of a negative number. The HTTP layer
+// maps it to 422 (well-formed request, invalid calculation).
+var ErrNegativeSqrt = errors.New("square root of a negative number")
+
+// unaryOp applies an operation to exactly one operand.
+type unaryOp func(a float64) (float64, error)
+
 // binaryOp applies an operation to exactly two operands.
 type binaryOp func(a, b float64) (float64, error)
 
-// binaryOps is the operation dispatch table; adding an operation is an entry
-// here, per ADR-0001. This pass implements only the four required operations —
-// the rest of ADR-0003 lands in a later prompt.
+// unaryOps is the dispatch table for one-operand operations (ADR-0001).
+var unaryOps = map[string]unaryOp{
+	"sqrt": sqrt,
+}
+
+// binaryOps is the dispatch table for two-operand operations; adding an
+// operation is an entry here, per ADR-0001.
 var binaryOps = map[string]binaryOp{
-	"add":      func(a, b float64) (float64, error) { return a + b, nil },
-	"subtract": func(a, b float64) (float64, error) { return a - b, nil },
-	"multiply": func(a, b float64) (float64, error) { return a * b, nil },
-	"divide":   divide,
+	"add":            func(a, b float64) (float64, error) { return a + b, nil },
+	"subtract":       func(a, b float64) (float64, error) { return a - b, nil },
+	"multiply":       func(a, b float64) (float64, error) { return a * b, nil },
+	"divide":         divide,
+	"exponentiation": exponentiation,
+	"percentage":     percentage,
 }
 
 // Calculate applies the named operation to operands and returns the result. It
 // returns ErrUnsupportedOperation for an unknown operation, ErrOperandCount
-// when the operand count does not match the operation's arity, and
-// ErrDivisionByZero for division by zero. Every operation in this pass is
-// binary and requires exactly two operands.
+// when the operand count does not match the operation's arity, and an
+// operation-specific sentinel (ErrDivisionByZero, ErrNegativeSqrt) or
+// ErrNonFiniteResult for an invalid calculation. Arity is checked per
+// operation: sqrt takes one operand, every other operation takes two.
 func Calculate(operation string, operands []float64) (float64, error) {
-	op, ok := binaryOps[operation]
-	if !ok {
-		return 0, ErrUnsupportedOperation
+	if op, ok := unaryOps[operation]; ok {
+		if len(operands) != 1 {
+			return 0, ErrOperandCount
+		}
+		return finite(op(operands[0]))
 	}
-	if len(operands) != 2 {
-		return 0, ErrOperandCount
+	if op, ok := binaryOps[operation]; ok {
+		if len(operands) != 2 {
+			return 0, ErrOperandCount
+		}
+		return finite(op(operands[0], operands[1]))
 	}
-	result, err := op(operands[0], operands[1])
+	return 0, ErrUnsupportedOperation
+}
+
+// finite passes an operation's result through unless it errored or is not a
+// finite number, in which case it returns ErrNonFiniteResult.
+func finite(result float64, err error) (float64, error) {
 	if err != nil {
 		return 0, err
 	}
@@ -66,4 +90,23 @@ func divide(a, b float64) (float64, error) {
 		return 0, ErrDivisionByZero
 	}
 	return a / b, nil
+}
+
+// exponentiation returns a raised to the power b. math.Pow returns +Inf on
+// overflow, which Calculate maps to ErrNonFiniteResult.
+func exponentiation(a, b float64) (float64, error) {
+	return math.Pow(a, b), nil
+}
+
+// sqrt returns the square root of a, or ErrNegativeSqrt when a is negative.
+func sqrt(a float64) (float64, error) {
+	if a < 0 {
+		return 0, ErrNegativeSqrt
+	}
+	return math.Sqrt(a), nil
+}
+
+// percentage returns (a / 100) * b — "a% of b", per ADR-0003.
+func percentage(a, b float64) (float64, error) {
+	return (a / 100) * b, nil
 }

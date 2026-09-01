@@ -43,8 +43,9 @@ type body struct {
 
 // Write maps err to a status code and writes the {"error": "message"} body. It
 // honours an *Error directly; otherwise it recognises the calc sentinels
-// (ErrOperandCount -> 400; ErrUnsupportedOperation, ErrDivisionByZero, and
-// ErrNonFiniteResult -> 422). Anything else is a 500 with a generic message.
+// (ErrOperandCount -> 400; ErrUnsupportedOperation, ErrDivisionByZero,
+// ErrNegativeSqrt, and ErrNonFiniteResult -> 422). Anything else is a 500 with
+// a generic message.
 func Write(w http.ResponseWriter, err error) {
 	he := classify(err)
 
@@ -65,6 +66,8 @@ func classify(err error) *Error {
 		return Unprocessable(calc.ErrUnsupportedOperation.Error())
 	case errors.Is(err, calc.ErrDivisionByZero):
 		return Unprocessable(calc.ErrDivisionByZero.Error())
+	case errors.Is(err, calc.ErrNegativeSqrt):
+		return Unprocessable(calc.ErrNegativeSqrt.Error())
 	case errors.Is(err, calc.ErrNonFiniteResult):
 		return Unprocessable(calc.ErrNonFiniteResult.Error())
 	default:
